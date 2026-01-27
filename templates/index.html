@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SEO 키워드 예측기</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            color: #fff;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            padding: 40px 0;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #00d9ff, #00ff88);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        header p {
+            color: #8892b0;
+            font-size: 1.1rem;
+        }
+
+        .search-box {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .input-group {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .input-group input {
+            flex: 1;
+            min-width: 300px;
+            padding: 15px 20px;
+            font-size: 1rem;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            transition: all 0.3s ease;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #00d9ff;
+            box-shadow: 0 0 20px rgba(0, 217, 255, 0.2);
+        }
+
+        .input-group input::placeholder {
+            color: #8892b0;
+        }
+
+        .input-group select {
+            padding: 15px 20px;
+            font-size: 1rem;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            cursor: pointer;
+        }
+
+        .input-group select option {
+            background: #1a1a2e;
+        }
+
+        .input-group button {
+            padding: 15px 40px;
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient(90deg, #00d9ff, #00ff88);
+            color: #1a1a2e;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .input-group button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 217, 255, 0.3);
+        }
+
+        .input-group button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-top-color: #00d9ff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .results {
+            display: none;
+        }
+
+        .results.active {
+            display: block;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .card h2 {
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            color: #00d9ff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card h2::before {
+            content: '';
+            width: 4px;
+            height: 24px;
+            background: linear-gradient(180deg, #00d9ff, #00ff88);
+            border-radius: 2px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .info-item {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .info-item label {
+            display: block;
+            color: #8892b0;
+            font-size: 0.85rem;
+            margin-bottom: 5px;
+        }
+
+        .info-item span {
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        .keywords-section {
+            margin-bottom: 25px;
+        }
+
+        .keywords-section h3 {
+            color: #8892b0;
+            font-size: 0.95rem;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .keyword-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .keyword-tag {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .keyword-tag.main {
+            background: linear-gradient(90deg, #00d9ff, #00ff88);
+            color: #1a1a2e;
+        }
+
+        .keyword-tag.secondary {
+            background: rgba(0, 217, 255, 0.2);
+            color: #00d9ff;
+            border: 1px solid rgba(0, 217, 255, 0.3);
+        }
+
+        .keyword-tag.longtail {
+            background: rgba(0, 255, 136, 0.15);
+            color: #00ff88;
+            border: 1px solid rgba(0, 255, 136, 0.3);
+        }
+
+        .score-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+
+        .score-item {
+            text-align: center;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 10px;
+        }
+
+        .score-item label {
+            display: block;
+            color: #8892b0;
+            font-size: 0.85rem;
+            margin-bottom: 8px;
+        }
+
+        .score-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 15px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .score-badge.high {
+            background: rgba(0, 255, 136, 0.2);
+            color: #00ff88;
+        }
+
+        .score-badge.medium {
+            background: rgba(255, 193, 7, 0.2);
+            color: #ffc107;
+        }
+
+        .score-badge.low {
+            background: rgba(255, 82, 82, 0.2);
+            color: #ff5252;
+        }
+
+        .recommendations {
+            list-style: none;
+        }
+
+        .recommendations li {
+            padding: 12px 15px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border-left: 3px solid #00d9ff;
+            color: #ccd6f6;
+        }
+
+        .summary {
+            font-size: 1.05rem;
+            line-height: 1.7;
+            color: #ccd6f6;
+        }
+
+        .error-message {
+            background: rgba(255, 82, 82, 0.1);
+            border: 1px solid rgba(255, 82, 82, 0.3);
+            color: #ff5252;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            display: none;
+        }
+
+        .error-message.active {
+            display: block;
+        }
+
+        footer {
+            text-align: center;
+            padding: 30px;
+            color: #8892b0;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 1.8rem;
+            }
+
+            .input-group {
+                flex-direction: column;
+            }
+
+            .input-group input {
+                min-width: 100%;
+            }
+
+            .input-group button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>SEO 키워드 예측기</h1>
+            <p>웹페이지 URL을 입력하면 AI가 타겟 SEO 키워드를 분석합니다</p>
+        </header>
+
+        <div class="search-box">
+            <div class="input-group">
+                <input type="text" id="urlInput" placeholder="분석할 웹페이지 URL을 입력하세요 (예: https://example.com)">
+                <select id="modelSelect">
+                    <option value="gpt-4o-mini">GPT-4o Mini (빠름)</option>
+                    <option value="gpt-4o">GPT-4o (정확)</option>
+                    <option value="gpt-4-turbo">GPT-4 Turbo</option>
+                    <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                </select>
+                <button id="analyzeBtn" onclick="analyzeURL()">분석하기</button>
+            </div>
+        </div>
+
+        <div class="error-message" id="errorMessage"></div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>웹페이지를 분석하고 있습니다...</p>
+            <p style="color: #8892b0; font-size: 0.9rem; margin-top: 10px;">GPT API 응답을 기다리는 중입니다</p>
+        </div>
+
+        <div class="results" id="results">
+            <!-- 기본 정보 -->
+            <div class="card" id="basicInfo">
+                <h2>페이지 기본 정보</h2>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <label>분석 URL</label>
+                        <span id="resultUrl">-</span>
+                    </div>
+                    <div class="info-item">
+                        <label>페이지 제목</label>
+                        <span id="resultTitle">-</span>
+                    </div>
+                    <div class="info-item">
+                        <label>내부 링크</label>
+                        <span id="resultInternal">-</span>
+                    </div>
+                    <div class="info-item">
+                        <label>외부 링크</label>
+                        <span id="resultExternal">-</span>
+                    </div>
+                    <div class="info-item">
+                        <label>이미지 수</label>
+                        <span id="resultImages">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 키워드 분석 -->
+            <div class="card" id="keywordsCard">
+                <h2>예측 키워드</h2>
+
+                <div class="keywords-section">
+                    <h3>메인 키워드</h3>
+                    <div class="keyword-tags" id="mainKeywords"></div>
+                </div>
+
+                <div class="keywords-section">
+                    <h3>보조 키워드</h3>
+                    <div class="keyword-tags" id="secondaryKeywords"></div>
+                </div>
+
+                <div class="keywords-section">
+                    <h3>롱테일 키워드</h3>
+                    <div class="keyword-tags" id="longtailKeywords"></div>
+                </div>
+            </div>
+
+            <!-- 카테고리 & 타겟 -->
+            <div class="card">
+                <h2>분석 개요</h2>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <label>주제 카테고리</label>
+                        <span id="topicCategory">-</span>
+                    </div>
+                    <div class="info-item">
+                        <label>타겟 오디언스</label>
+                        <span id="targetAudience">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SEO 점수 -->
+            <div class="card" id="scoreCard">
+                <h2>SEO 최적화 점수</h2>
+                <div class="score-grid">
+                    <div class="score-item">
+                        <label>Title 최적화</label>
+                        <span class="score-badge" id="scoreTitle">-</span>
+                    </div>
+                    <div class="score-item">
+                        <label>Meta Description</label>
+                        <span class="score-badge" id="scoreMeta">-</span>
+                    </div>
+                    <div class="score-item">
+                        <label>헤딩 구조</label>
+                        <span class="score-badge" id="scoreHeading">-</span>
+                    </div>
+                    <div class="score-item">
+                        <label>콘텐츠 관련성</label>
+                        <span class="score-badge" id="scoreContent">-</span>
+                    </div>
+                    <div class="score-item">
+                        <label>종합 점수</label>
+                        <span class="score-badge" id="scoreOverall">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 개선 제안 -->
+            <div class="card" id="recommendationsCard">
+                <h2>개선 제안</h2>
+                <ul class="recommendations" id="recommendations"></ul>
+            </div>
+
+            <!-- 분석 요약 -->
+            <div class="card" id="summaryCard">
+                <h2>분석 요약</h2>
+                <p class="summary" id="analysisSummary">-</p>
+            </div>
+        </div>
+
+        <footer>
+            <p>SEO Keyword Predictor - Powered by GPT API</p>
+        </footer>
+    </div>
+
+    <script>
+        async function analyzeURL() {
+            const urlInput = document.getElementById('urlInput');
+            const modelSelect = document.getElementById('modelSelect');
+            const analyzeBtn = document.getElementById('analyzeBtn');
+            const loading = document.getElementById('loading');
+            const results = document.getElementById('results');
+            const errorMessage = document.getElementById('errorMessage');
+
+            const url = urlInput.value.trim();
+            const model = modelSelect.value;
+
+            if (!url) {
+                showError('URL을 입력해주세요.');
+                return;
+            }
+
+            // UI 상태 변경
+            analyzeBtn.disabled = true;
+            loading.classList.add('active');
+            results.classList.remove('active');
+            errorMessage.classList.remove('active');
+
+            try {
+                const response = await fetch('/analyze', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ url, model }),
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    displayResults(data);
+                } else {
+                    showError(data.error || '분석 중 오류가 발생했습니다.');
+                }
+            } catch (error) {
+                showError('서버 연결에 실패했습니다: ' + error.message);
+            } finally {
+                analyzeBtn.disabled = false;
+                loading.classList.remove('active');
+            }
+        }
+
+        function showError(message) {
+            const errorMessage = document.getElementById('errorMessage');
+            errorMessage.textContent = message;
+            errorMessage.classList.add('active');
+        }
+
+        function displayResults(data) {
+            const results = document.getElementById('results');
+            results.classList.add('active');
+
+            // 기본 정보
+            document.getElementById('resultUrl').textContent = data.url || '-';
+            document.getElementById('resultTitle').textContent = data.scrape_info?.title || '-';
+            document.getElementById('resultInternal').textContent = data.scrape_info?.internal_links + '개' || '-';
+            document.getElementById('resultExternal').textContent = data.scrape_info?.external_links + '개' || '-';
+            document.getElementById('resultImages').textContent = data.scrape_info?.images + '개' || '-';
+
+            const analysis = data.analysis || {};
+
+            // 키워드 표시
+            displayKeywords('mainKeywords', analysis.main_keywords || [], 'main');
+            displayKeywords('secondaryKeywords', analysis.secondary_keywords || [], 'secondary');
+            displayKeywords('longtailKeywords', analysis.long_tail_keywords || [], 'longtail');
+
+            // 카테고리 & 타겟
+            document.getElementById('topicCategory').textContent = analysis.topic_category || '-';
+            document.getElementById('targetAudience').textContent = analysis.target_audience || '-';
+
+            // SEO 점수
+            const seoScore = analysis.seo_score || {};
+            setScoreBadge('scoreTitle', seoScore.title_optimization);
+            setScoreBadge('scoreMeta', seoScore.meta_description);
+            setScoreBadge('scoreHeading', seoScore.heading_structure);
+            setScoreBadge('scoreContent', seoScore.content_relevance);
+            setScoreBadge('scoreOverall', seoScore.overall);
+
+            // 개선 제안
+            const recommendationsList = document.getElementById('recommendations');
+            recommendationsList.innerHTML = '';
+            (analysis.recommendations || []).forEach(rec => {
+                const li = document.createElement('li');
+                li.textContent = rec;
+                recommendationsList.appendChild(li);
+            });
+
+            // 분석 요약
+            document.getElementById('analysisSummary').textContent = analysis.analysis_summary || '-';
+        }
+
+        function displayKeywords(elementId, keywords, type) {
+            const container = document.getElementById(elementId);
+            container.innerHTML = '';
+            keywords.forEach(keyword => {
+                const tag = document.createElement('span');
+                tag.className = `keyword-tag ${type}`;
+                tag.textContent = keyword;
+                container.appendChild(tag);
+            });
+        }
+
+        function setScoreBadge(elementId, score) {
+            const badge = document.getElementById(elementId);
+            badge.textContent = score || '-';
+            badge.className = 'score-badge';
+
+            if (score === '상') {
+                badge.classList.add('high');
+            } else if (score === '중') {
+                badge.classList.add('medium');
+            } else if (score === '하') {
+                badge.classList.add('low');
+            }
+        }
+
+        // Enter 키로 분석 실행
+        document.getElementById('urlInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                analyzeURL();
+            }
+        });
+    </script>
+</body>
+</html>
