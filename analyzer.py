@@ -157,6 +157,120 @@ class SEOAnalyzer:
 
         return prompt
 
+    def expand_keywords(
+        self, keywords: list, product_info: str = "", model: str = "gpt-4o-mini"
+    ) -> dict:
+        """기존 키워드를 바탕으로 새로운 키워드를 발굴합니다."""
+
+        keywords_text = ", ".join(keywords[:20])
+
+        prompt = f"""다음 키워드들을 바탕으로 SEO에 활용할 수 있는 새로운 키워드를 발굴해주세요.
+
+## 기존 키워드
+{keywords_text}
+
+## 제품/서비스 정보
+{product_info if product_info else '(제공되지 않음)'}
+
+다음 JSON 형식으로 응답해주세요:
+
+{{
+    "related_keywords": ["연관 키워드 10-15개 - 기존 키워드와 의미적으로 관련된 키워드"],
+    "semantic_keywords": ["시맨틱 키워드 10-15개 - LSI(Latent Semantic Indexing) 키워드"],
+    "question_keywords": ["질문형 키워드 5-10개 - 사용자들이 검색할 만한 질문 형태"],
+    "buyer_intent_keywords": ["구매 의도 키워드 5-10개 - 구매 전환에 효과적인 키워드"],
+    "comparison_keywords": ["비교 키워드 5-10개 - vs, 비교, 차이 등이 포함된 키워드"],
+    "problem_solution_keywords": ["문제-해결 키워드 5-10개 - 고객의 문제와 해결책 관련"],
+    "trending_suggestions": ["트렌드 키워드 제안 5개 - 현재 트렌드에 맞는 키워드 아이디어"],
+    "negative_keywords": ["제외 추천 키워드 5개 - 광고 시 제외하면 좋을 키워드"],
+    "keyword_clusters": [
+        {{
+            "theme": "클러스터 주제",
+            "keywords": ["관련 키워드 그룹"]
+        }}
+    ],
+    "content_ideas": ["이 키워드들로 작성할 수 있는 콘텐츠 아이디어 5개"]
+}}"""
+
+        try:
+            response = self.client.chat.completions.create(
+                model=model,
+                messages=[
+                    {
+                        "role": "system",
+                        "content": """당신은 SEO 및 키워드 리서치 전문가입니다.
+주어진 키워드를 분석하여 검색 엔진 최적화와 콘텐츠 마케팅에 활용할 수 있는
+다양한 관련 키워드를 발굴합니다. 한국어 키워드에 집중해주세요.""",
+                    },
+                    {"role": "user", "content": prompt},
+                ],
+                temperature=0.5,
+                response_format={"type": "json_object"},
+            )
+
+            result = json.loads(response.choices[0].message.content)
+            return result
+
+        except Exception as e:
+            return {"error": str(e)}
+
+    def find_similar_products(
+        self, product_name: str, category: str = "", model: str = "gpt-4o-mini"
+    ) -> dict:
+        """비슷한 제품/서비스와 관련 검색어를 찾습니다."""
+
+        prompt = f"""다음 제품/서비스와 비슷하거나 경쟁 관계에 있는 제품들과 관련 검색어를 찾아주세요.
+
+## 제품/서비스명
+{product_name}
+
+## 카테고리
+{category if category else '(자동 추정)'}
+
+다음 JSON 형식으로 응답해주세요:
+
+{{
+    "product_category": "추정 카테고리",
+    "similar_products": [
+        {{
+            "name": "비슷한 제품명",
+            "reason": "유사한 이유",
+            "search_keywords": ["이 제품 관련 검색 키워드"]
+        }}
+    ],
+    "competitor_brands": ["경쟁 브랜드 5-10개"],
+    "alternative_searches": ["대체재 검색 키워드 10개"],
+    "complementary_products": ["함께 구매하는 보완재 제품 5-10개"],
+    "price_range_keywords": ["가격대별 검색 키워드 - 저렴한, 프리미엄, 가성비 등"],
+    "use_case_keywords": ["사용 목적별 키워드 - 업무용, 가정용, 선물용 등"],
+    "target_audience_keywords": ["타겟 고객별 키워드 - 학생용, 직장인용, 초보자용 등"],
+    "seasonal_keywords": ["시즌/이벤트 관련 키워드"],
+    "marketplace_keywords": ["마켓플레이스별 검색 키워드 - 쿠팡, 네이버, 11번가 등"],
+    "seo_recommendations": ["이 제품 SEO를 위한 추천사항 3-5개"]
+}}"""
+
+        try:
+            response = self.client.chat.completions.create(
+                model=model,
+                messages=[
+                    {
+                        "role": "system",
+                        "content": """당신은 이커머스 및 제품 마케팅 전문가입니다.
+제품 분석을 통해 경쟁 제품, 대체재, 관련 검색어를 찾아내고
+효과적인 SEO 및 마케팅 전략을 제안합니다. 한국 시장에 초점을 맞춰주세요.""",
+                    },
+                    {"role": "user", "content": prompt},
+                ],
+                temperature=0.5,
+                response_format={"type": "json_object"},
+            )
+
+            result = json.loads(response.choices[0].message.content)
+            return result
+
+        except Exception as e:
+            return {"error": str(e)}
+
     def get_quick_analysis(self, seo_data: dict, model: str = "gpt-4o-mini") -> str:
         """간단한 텍스트 형식의 분석 결과를 반환합니다."""
 

@@ -43,6 +43,45 @@
             font-size: 1.1rem;
         }
 
+        /* 탭 스타일 */
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            padding: 12px 24px;
+            font-size: 1rem;
+            font-weight: 500;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #8892b0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn:hover {
+            border-color: rgba(0, 217, 255, 0.3);
+            color: #fff;
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(90deg, #00d9ff, #00ff88);
+            color: #1a1a2e;
+            border-color: transparent;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
         .search-box {
             background: rgba(255, 255, 255, 0.05);
             border-radius: 20px;
@@ -58,7 +97,7 @@
             flex-wrap: wrap;
         }
 
-        .input-group input {
+        .input-group input, .input-group textarea {
             flex: 1;
             min-width: 300px;
             padding: 15px 20px;
@@ -70,13 +109,19 @@
             transition: all 0.3s ease;
         }
 
-        .input-group input:focus {
+        .input-group textarea {
+            min-height: 80px;
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        .input-group input:focus, .input-group textarea:focus {
             outline: none;
             border-color: #00d9ff;
             box-shadow: 0 0 20px rgba(0, 217, 255, 0.2);
         }
 
-        .input-group input::placeholder {
+        .input-group input::placeholder, .input-group textarea::placeholder {
             color: #8892b0;
         }
 
@@ -115,6 +160,17 @@
             opacity: 0.6;
             cursor: not-allowed;
             transform: none;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        .input-row:last-child {
+            margin-bottom: 0;
         }
 
         .loading {
@@ -253,6 +309,24 @@
             border: 1px solid rgba(0, 255, 136, 0.3);
         }
 
+        .keyword-tag.question {
+            background: rgba(255, 193, 7, 0.15);
+            color: #ffc107;
+            border: 1px solid rgba(255, 193, 7, 0.3);
+        }
+
+        .keyword-tag.buyer {
+            background: rgba(255, 82, 82, 0.15);
+            color: #ff6b6b;
+            border: 1px solid rgba(255, 82, 82, 0.3);
+        }
+
+        .keyword-tag.purple {
+            background: rgba(156, 39, 176, 0.15);
+            color: #ce93d8;
+            border: 1px solid rgba(156, 39, 176, 0.3);
+        }
+
         .score-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -296,17 +370,21 @@
             color: #ff5252;
         }
 
-        .recommendations {
+        .recommendations, .content-ideas {
             list-style: none;
         }
 
-        .recommendations li {
+        .recommendations li, .content-ideas li {
             padding: 12px 15px;
             background: rgba(255, 255, 255, 0.03);
             border-radius: 8px;
             margin-bottom: 10px;
             border-left: 3px solid #00d9ff;
             color: #ccd6f6;
+        }
+
+        .content-ideas li {
+            border-left-color: #00ff88;
         }
 
         .summary {
@@ -329,6 +407,37 @@
             display: block;
         }
 
+        .product-card {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+
+        .product-card h4 {
+            color: #00d9ff;
+            margin-bottom: 8px;
+        }
+
+        .product-card p {
+            color: #8892b0;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+
+        .cluster-item {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+
+        .cluster-item h4 {
+            color: #00ff88;
+            margin-bottom: 10px;
+            font-size: 1rem;
+        }
+
         footer {
             text-align: center;
             padding: 30px;
@@ -341,16 +450,25 @@
                 font-size: 1.8rem;
             }
 
-            .input-group {
+            .input-group, .input-row {
                 flex-direction: column;
             }
 
-            .input-group input {
+            .input-group input, .input-group textarea {
                 min-width: 100%;
             }
 
             .input-group button {
                 width: 100%;
+            }
+
+            .tabs {
+                flex-direction: column;
+            }
+
+            .tab-btn {
+                width: 100%;
+                text-align: center;
             }
         }
     </style>
@@ -359,130 +477,266 @@
     <div class="container">
         <header>
             <h1>SEO 키워드 예측기</h1>
-            <p>웹페이지 URL을 입력하면 AI가 타겟 SEO 키워드를 분석합니다</p>
+            <p>AI를 활용한 SEO 키워드 분석 및 발굴 도구</p>
         </header>
 
-        <div class="search-box">
-            <div class="input-group">
-                <input type="text" id="urlInput" placeholder="분석할 웹페이지 URL을 입력하세요 (예: https://example.com)">
-                <select id="modelSelect">
-                    <option value="gpt-4o-mini">GPT-4o Mini (빠름)</option>
-                    <option value="gpt-4o">GPT-4o (정확)</option>
-                    <option value="gpt-4-turbo">GPT-4 Turbo</option>
-                    <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
-                </select>
-                <button id="analyzeBtn" onclick="analyzeURL()">분석하기</button>
+        <!-- 탭 메뉴 -->
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('analyze')">URL 분석</button>
+            <button class="tab-btn" onclick="switchTab('expand')">키워드 확장</button>
+            <button class="tab-btn" onclick="switchTab('similar')">비슷한 제품 검색</button>
+        </div>
+
+        <!-- 탭 1: URL 분석 -->
+        <div id="tab-analyze" class="tab-content active">
+            <div class="search-box">
+                <div class="input-group">
+                    <input type="text" id="urlInput" placeholder="분석할 웹페이지 URL을 입력하세요 (예: https://example.com)">
+                    <select id="modelSelect">
+                        <option value="gpt-4o-mini">GPT-4o Mini (빠름)</option>
+                        <option value="gpt-4o">GPT-4o (정확)</option>
+                        <option value="gpt-4-turbo">GPT-4 Turbo</option>
+                        <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                    </select>
+                    <button id="analyzeBtn" onclick="analyzeURL()">분석하기</button>
+                </div>
+            </div>
+
+            <div class="error-message" id="errorMessage"></div>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>웹페이지를 분석하고 있습니다...</p>
+                <p style="color: #8892b0; font-size: 0.9rem; margin-top: 10px;">GPT API 응답을 기다리는 중입니다</p>
+            </div>
+
+            <div class="results" id="results">
+                <div class="card" id="basicInfo">
+                    <h2>페이지 기본 정보</h2>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <label>분석 URL</label>
+                            <span id="resultUrl" class="url-text" title="">-</span>
+                        </div>
+                        <div class="info-item">
+                            <label>페이지 제목</label>
+                            <span id="resultTitle">-</span>
+                        </div>
+                        <div class="info-item">
+                            <label>내부 링크</label>
+                            <span id="resultInternal">-</span>
+                        </div>
+                        <div class="info-item">
+                            <label>외부 링크</label>
+                            <span id="resultExternal">-</span>
+                        </div>
+                        <div class="info-item">
+                            <label>이미지 수</label>
+                            <span id="resultImages">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card" id="keywordsCard">
+                    <h2>예측 키워드</h2>
+                    <div class="keywords-section">
+                        <h3>메인 키워드</h3>
+                        <div class="keyword-tags" id="mainKeywords"></div>
+                    </div>
+                    <div class="keywords-section">
+                        <h3>보조 키워드</h3>
+                        <div class="keyword-tags" id="secondaryKeywords"></div>
+                    </div>
+                    <div class="keywords-section">
+                        <h3>롱테일 키워드</h3>
+                        <div class="keyword-tags" id="longtailKeywords"></div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>분석 개요</h2>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <label>주제 카테고리</label>
+                            <span id="topicCategory">-</span>
+                        </div>
+                        <div class="info-item">
+                            <label>타겟 오디언스</label>
+                            <span id="targetAudience">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card" id="scoreCard">
+                    <h2>SEO 최적화 점수</h2>
+                    <div class="score-grid">
+                        <div class="score-item">
+                            <label>Title 최적화</label>
+                            <span class="score-badge" id="scoreTitle">-</span>
+                        </div>
+                        <div class="score-item">
+                            <label>Meta Description</label>
+                            <span class="score-badge" id="scoreMeta">-</span>
+                        </div>
+                        <div class="score-item">
+                            <label>헤딩 구조</label>
+                            <span class="score-badge" id="scoreHeading">-</span>
+                        </div>
+                        <div class="score-item">
+                            <label>콘텐츠 관련성</label>
+                            <span class="score-badge" id="scoreContent">-</span>
+                        </div>
+                        <div class="score-item">
+                            <label>종합 점수</label>
+                            <span class="score-badge" id="scoreOverall">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card" id="recommendationsCard">
+                    <h2>개선 제안</h2>
+                    <ul class="recommendations" id="recommendations"></ul>
+                </div>
+
+                <div class="card" id="summaryCard">
+                    <h2>분석 요약</h2>
+                    <p class="summary" id="analysisSummary">-</p>
+                </div>
             </div>
         </div>
 
-        <div class="error-message" id="errorMessage"></div>
+        <!-- 탭 2: 키워드 확장 -->
+        <div id="tab-expand" class="tab-content">
+            <div class="search-box">
+                <div class="input-row">
+                    <textarea id="keywordsInput" placeholder="확장할 키워드를 입력하세요 (쉼표로 구분)&#10;예: 노트북, 가성비 노트북, 게이밍 노트북"></textarea>
+                </div>
+                <div class="input-row">
+                    <input type="text" id="productInfoInput" placeholder="제품/서비스 정보 (선택사항)">
+                    <select id="expandModelSelect">
+                        <option value="gpt-4o-mini">GPT-4o Mini (빠름)</option>
+                        <option value="gpt-4o">GPT-4o (정확)</option>
+                    </select>
+                    <button id="expandBtn" onclick="expandKeywords()">키워드 확장</button>
+                </div>
+            </div>
 
-        <div class="loading" id="loading">
-            <div class="spinner"></div>
-            <p>웹페이지를 분석하고 있습니다...</p>
-            <p style="color: #8892b0; font-size: 0.9rem; margin-top: 10px;">GPT API 응답을 기다리는 중입니다</p>
+            <div class="error-message" id="expandErrorMessage"></div>
+
+            <div class="loading" id="expandLoading">
+                <div class="spinner"></div>
+                <p>키워드를 확장하고 있습니다...</p>
+            </div>
+
+            <div class="results" id="expandResults">
+                <div class="card">
+                    <h2>연관 키워드</h2>
+                    <div class="keyword-tags" id="relatedKeywords"></div>
+                </div>
+
+                <div class="card">
+                    <h2>시맨틱 키워드 (LSI)</h2>
+                    <div class="keyword-tags" id="semanticKeywords"></div>
+                </div>
+
+                <div class="card">
+                    <h2>질문형 키워드</h2>
+                    <div class="keyword-tags" id="questionKeywords"></div>
+                </div>
+
+                <div class="card">
+                    <h2>구매 의도 키워드</h2>
+                    <div class="keyword-tags" id="buyerKeywords"></div>
+                </div>
+
+                <div class="card">
+                    <h2>비교 키워드</h2>
+                    <div class="keyword-tags" id="comparisonKeywords"></div>
+                </div>
+
+                <div class="card">
+                    <h2>문제-해결 키워드</h2>
+                    <div class="keyword-tags" id="problemKeywords"></div>
+                </div>
+
+                <div class="card">
+                    <h2>키워드 클러스터</h2>
+                    <div id="keywordClusters"></div>
+                </div>
+
+                <div class="card">
+                    <h2>콘텐츠 아이디어</h2>
+                    <ul class="content-ideas" id="contentIdeas"></ul>
+                </div>
+            </div>
         </div>
 
-        <div class="results" id="results">
-            <!-- 기본 정보 -->
-            <div class="card" id="basicInfo">
-                <h2>페이지 기본 정보</h2>
-                <div class="info-grid">
-                    <div class="info-item">
-                        <label>분석 URL</label>
-                        <span id="resultUrl" class="url-text" title="">-</span>
-                    </div>
-                    <div class="info-item">
-                        <label>페이지 제목</label>
-                        <span id="resultTitle">-</span>
-                    </div>
-                    <div class="info-item">
-                        <label>내부 링크</label>
-                        <span id="resultInternal">-</span>
-                    </div>
-                    <div class="info-item">
-                        <label>외부 링크</label>
-                        <span id="resultExternal">-</span>
-                    </div>
-                    <div class="info-item">
-                        <label>이미지 수</label>
-                        <span id="resultImages">-</span>
-                    </div>
+        <!-- 탭 3: 비슷한 제품 검색 -->
+        <div id="tab-similar" class="tab-content">
+            <div class="search-box">
+                <div class="input-group">
+                    <input type="text" id="productNameInput" placeholder="제품/서비스명을 입력하세요 (예: 에이더 머슬밴드)">
+                    <input type="text" id="categoryInput" placeholder="카테고리 (선택사항)">
+                    <select id="similarModelSelect">
+                        <option value="gpt-4o-mini">GPT-4o Mini (빠름)</option>
+                        <option value="gpt-4o">GPT-4o (정확)</option>
+                    </select>
+                    <button id="similarBtn" onclick="findSimilarProducts()">검색하기</button>
                 </div>
             </div>
 
-            <!-- 키워드 분석 -->
-            <div class="card" id="keywordsCard">
-                <h2>예측 키워드</h2>
+            <div class="error-message" id="similarErrorMessage"></div>
 
-                <div class="keywords-section">
-                    <h3>메인 키워드</h3>
-                    <div class="keyword-tags" id="mainKeywords"></div>
-                </div>
-
-                <div class="keywords-section">
-                    <h3>보조 키워드</h3>
-                    <div class="keyword-tags" id="secondaryKeywords"></div>
-                </div>
-
-                <div class="keywords-section">
-                    <h3>롱테일 키워드</h3>
-                    <div class="keyword-tags" id="longtailKeywords"></div>
-                </div>
+            <div class="loading" id="similarLoading">
+                <div class="spinner"></div>
+                <p>비슷한 제품을 찾고 있습니다...</p>
             </div>
 
-            <!-- 카테고리 & 타겟 -->
-            <div class="card">
-                <h2>분석 개요</h2>
-                <div class="info-grid">
-                    <div class="info-item">
-                        <label>주제 카테고리</label>
-                        <span id="topicCategory">-</span>
-                    </div>
-                    <div class="info-item">
-                        <label>타겟 오디언스</label>
-                        <span id="targetAudience">-</span>
-                    </div>
+            <div class="results" id="similarResults">
+                <div class="card">
+                    <h2>비슷한 제품</h2>
+                    <div id="similarProductsList"></div>
                 </div>
-            </div>
 
-            <!-- SEO 점수 -->
-            <div class="card" id="scoreCard">
-                <h2>SEO 최적화 점수</h2>
-                <div class="score-grid">
-                    <div class="score-item">
-                        <label>Title 최적화</label>
-                        <span class="score-badge" id="scoreTitle">-</span>
-                    </div>
-                    <div class="score-item">
-                        <label>Meta Description</label>
-                        <span class="score-badge" id="scoreMeta">-</span>
-                    </div>
-                    <div class="score-item">
-                        <label>헤딩 구조</label>
-                        <span class="score-badge" id="scoreHeading">-</span>
-                    </div>
-                    <div class="score-item">
-                        <label>콘텐츠 관련성</label>
-                        <span class="score-badge" id="scoreContent">-</span>
-                    </div>
-                    <div class="score-item">
-                        <label>종합 점수</label>
-                        <span class="score-badge" id="scoreOverall">-</span>
-                    </div>
+                <div class="card">
+                    <h2>경쟁 브랜드</h2>
+                    <div class="keyword-tags" id="competitorBrands"></div>
                 </div>
-            </div>
 
-            <!-- 개선 제안 -->
-            <div class="card" id="recommendationsCard">
-                <h2>개선 제안</h2>
-                <ul class="recommendations" id="recommendations"></ul>
-            </div>
+                <div class="card">
+                    <h2>대체재 검색 키워드</h2>
+                    <div class="keyword-tags" id="alternativeSearches"></div>
+                </div>
 
-            <!-- 분석 요약 -->
-            <div class="card" id="summaryCard">
-                <h2>분석 요약</h2>
-                <p class="summary" id="analysisSummary">-</p>
+                <div class="card">
+                    <h2>함께 구매하는 제품</h2>
+                    <div class="keyword-tags" id="complementaryProducts"></div>
+                </div>
+
+                <div class="card">
+                    <h2>가격대별 키워드</h2>
+                    <div class="keyword-tags" id="priceKeywords"></div>
+                </div>
+
+                <div class="card">
+                    <h2>사용 목적별 키워드</h2>
+                    <div class="keyword-tags" id="useCaseKeywords"></div>
+                </div>
+
+                <div class="card">
+                    <h2>타겟 고객별 키워드</h2>
+                    <div class="keyword-tags" id="targetKeywords"></div>
+                </div>
+
+                <div class="card">
+                    <h2>마켓플레이스별 키워드</h2>
+                    <div class="keyword-tags" id="marketplaceKeywords"></div>
+                </div>
+
+                <div class="card">
+                    <h2>SEO 추천사항</h2>
+                    <ul class="recommendations" id="seoRecommendations"></ul>
+                </div>
             </div>
         </div>
 
@@ -492,6 +746,16 @@
     </div>
 
     <script>
+        // 탭 전환
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+            document.querySelector(`[onclick="switchTab('${tabName}')"]`).classList.add('active');
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+        }
+
+        // URL 분석
         async function analyzeURL() {
             const urlInput = document.getElementById('urlInput');
             const modelSelect = document.getElementById('modelSelect');
@@ -504,11 +768,10 @@
             const model = modelSelect.value;
 
             if (!url) {
-                showError('URL을 입력해주세요.');
+                showError('errorMessage', 'URL을 입력해주세요.');
                 return;
             }
 
-            // UI 상태 변경
             analyzeBtn.disabled = true;
             loading.classList.add('active');
             results.classList.remove('active');
@@ -517,38 +780,128 @@
             try {
                 const response = await fetch('/analyze', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ url, model }),
                 });
 
                 const data = await response.json();
 
                 if (data.success) {
-                    displayResults(data);
+                    displayAnalyzeResults(data);
                 } else {
-                    showError(data.error || '분석 중 오류가 발생했습니다.');
+                    showError('errorMessage', data.error || '분석 중 오류가 발생했습니다.');
                 }
             } catch (error) {
-                showError('서버 연결에 실패했습니다: ' + error.message);
+                showError('errorMessage', '서버 연결에 실패했습니다: ' + error.message);
             } finally {
                 analyzeBtn.disabled = false;
                 loading.classList.remove('active');
             }
         }
 
-        function showError(message) {
-            const errorMessage = document.getElementById('errorMessage');
+        // 키워드 확장
+        async function expandKeywords() {
+            const keywordsInput = document.getElementById('keywordsInput');
+            const productInfoInput = document.getElementById('productInfoInput');
+            const modelSelect = document.getElementById('expandModelSelect');
+            const expandBtn = document.getElementById('expandBtn');
+            const loading = document.getElementById('expandLoading');
+            const results = document.getElementById('expandResults');
+            const errorMessage = document.getElementById('expandErrorMessage');
+
+            const keywordsText = keywordsInput.value.trim();
+            const keywords = keywordsText.split(',').map(k => k.trim()).filter(k => k);
+            const productInfo = productInfoInput.value.trim();
+            const model = modelSelect.value;
+
+            if (keywords.length === 0) {
+                showError('expandErrorMessage', '키워드를 입력해주세요.');
+                return;
+            }
+
+            expandBtn.disabled = true;
+            loading.classList.add('active');
+            results.classList.remove('active');
+            errorMessage.classList.remove('active');
+
+            try {
+                const response = await fetch('/expand-keywords', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ keywords, product_info: productInfo, model }),
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    displayExpandResults(data.expansion);
+                } else {
+                    showError('expandErrorMessage', data.error || '키워드 확장 중 오류가 발생했습니다.');
+                }
+            } catch (error) {
+                showError('expandErrorMessage', '서버 연결에 실패했습니다: ' + error.message);
+            } finally {
+                expandBtn.disabled = false;
+                loading.classList.remove('active');
+            }
+        }
+
+        // 비슷한 제품 검색
+        async function findSimilarProducts() {
+            const productNameInput = document.getElementById('productNameInput');
+            const categoryInput = document.getElementById('categoryInput');
+            const modelSelect = document.getElementById('similarModelSelect');
+            const similarBtn = document.getElementById('similarBtn');
+            const loading = document.getElementById('similarLoading');
+            const results = document.getElementById('similarResults');
+            const errorMessage = document.getElementById('similarErrorMessage');
+
+            const productName = productNameInput.value.trim();
+            const category = categoryInput.value.trim();
+            const model = modelSelect.value;
+
+            if (!productName) {
+                showError('similarErrorMessage', '제품명을 입력해주세요.');
+                return;
+            }
+
+            similarBtn.disabled = true;
+            loading.classList.add('active');
+            results.classList.remove('active');
+            errorMessage.classList.remove('active');
+
+            try {
+                const response = await fetch('/similar-products', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ product_name: productName, category, model }),
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    displaySimilarResults(data.similar);
+                } else {
+                    showError('similarErrorMessage', data.error || '검색 중 오류가 발생했습니다.');
+                }
+            } catch (error) {
+                showError('similarErrorMessage', '서버 연결에 실패했습니다: ' + error.message);
+            } finally {
+                similarBtn.disabled = false;
+                loading.classList.remove('active');
+            }
+        }
+
+        function showError(elementId, message) {
+            const errorMessage = document.getElementById(elementId);
             errorMessage.textContent = message;
             errorMessage.classList.add('active');
         }
 
-        function displayResults(data) {
+        function displayAnalyzeResults(data) {
             const results = document.getElementById('results');
             results.classList.add('active');
 
-            // 기본 정보
             const resultUrlEl = document.getElementById('resultUrl');
             resultUrlEl.textContent = data.url || '-';
             resultUrlEl.title = data.url || '';
@@ -559,16 +912,13 @@
 
             const analysis = data.analysis || {};
 
-            // 키워드 표시
             displayKeywords('mainKeywords', analysis.main_keywords || [], 'main');
             displayKeywords('secondaryKeywords', analysis.secondary_keywords || [], 'secondary');
             displayKeywords('longtailKeywords', analysis.long_tail_keywords || [], 'longtail');
 
-            // 카테고리 & 타겟
             document.getElementById('topicCategory').textContent = analysis.topic_category || '-';
             document.getElementById('targetAudience').textContent = analysis.target_audience || '-';
 
-            // SEO 점수
             const seoScore = analysis.seo_score || {};
             setScoreBadge('scoreTitle', seoScore.title_optimization);
             setScoreBadge('scoreMeta', seoScore.meta_description);
@@ -576,7 +926,6 @@
             setScoreBadge('scoreContent', seoScore.content_relevance);
             setScoreBadge('scoreOverall', seoScore.overall);
 
-            // 개선 제안
             const recommendationsList = document.getElementById('recommendations');
             recommendationsList.innerHTML = '';
             (analysis.recommendations || []).forEach(rec => {
@@ -585,8 +934,88 @@
                 recommendationsList.appendChild(li);
             });
 
-            // 분석 요약
             document.getElementById('analysisSummary').textContent = analysis.analysis_summary || '-';
+        }
+
+        function displayExpandResults(data) {
+            const results = document.getElementById('expandResults');
+            results.classList.add('active');
+
+            displayKeywords('relatedKeywords', data.related_keywords || [], 'main');
+            displayKeywords('semanticKeywords', data.semantic_keywords || [], 'secondary');
+            displayKeywords('questionKeywords', data.question_keywords || [], 'question');
+            displayKeywords('buyerKeywords', data.buyer_intent_keywords || [], 'buyer');
+            displayKeywords('comparisonKeywords', data.comparison_keywords || [], 'longtail');
+            displayKeywords('problemKeywords', data.problem_solution_keywords || [], 'purple');
+
+            // 키워드 클러스터
+            const clustersContainer = document.getElementById('keywordClusters');
+            clustersContainer.innerHTML = '';
+            (data.keyword_clusters || []).forEach(cluster => {
+                const div = document.createElement('div');
+                div.className = 'cluster-item';
+                div.innerHTML = `<h4>${cluster.theme}</h4><div class="keyword-tags"></div>`;
+                const tagsContainer = div.querySelector('.keyword-tags');
+                (cluster.keywords || []).forEach(kw => {
+                    const tag = document.createElement('span');
+                    tag.className = 'keyword-tag secondary';
+                    tag.textContent = kw;
+                    tagsContainer.appendChild(tag);
+                });
+                clustersContainer.appendChild(div);
+            });
+
+            // 콘텐츠 아이디어
+            const ideasList = document.getElementById('contentIdeas');
+            ideasList.innerHTML = '';
+            (data.content_ideas || []).forEach(idea => {
+                const li = document.createElement('li');
+                li.textContent = idea;
+                ideasList.appendChild(li);
+            });
+        }
+
+        function displaySimilarResults(data) {
+            const results = document.getElementById('similarResults');
+            results.classList.add('active');
+
+            // 비슷한 제품 목록
+            const productsList = document.getElementById('similarProductsList');
+            productsList.innerHTML = '';
+            (data.similar_products || []).forEach(product => {
+                const div = document.createElement('div');
+                div.className = 'product-card';
+                div.innerHTML = `
+                    <h4>${product.name}</h4>
+                    <p>${product.reason}</p>
+                    <div class="keyword-tags"></div>
+                `;
+                const tagsContainer = div.querySelector('.keyword-tags');
+                (product.search_keywords || []).forEach(kw => {
+                    const tag = document.createElement('span');
+                    tag.className = 'keyword-tag secondary';
+                    tag.textContent = kw;
+                    tagsContainer.appendChild(tag);
+                });
+                productsList.appendChild(div);
+            });
+
+            displayKeywords('competitorBrands', data.competitor_brands || [], 'main');
+            displayKeywords('alternativeSearches', data.alternative_searches || [], 'secondary');
+            displayKeywords('complementaryProducts', data.complementary_products || [], 'longtail');
+            displayKeywords('priceKeywords', data.price_range_keywords || [], 'question');
+            displayKeywords('useCaseKeywords', data.use_case_keywords || [], 'buyer');
+            displayKeywords('targetKeywords', data.target_audience_keywords || [], 'purple');
+            displayKeywords('marketplaceKeywords', data.marketplace_keywords || [], 'secondary');
+
+            // SEO 추천사항
+            const recList = document.getElementById('seoRecommendations');
+            recList.innerHTML = '';
+            (data.seo_recommendations || []).forEach(rec => {
+                const li = document.createElement('li');
+                li.textContent = rec;
+                recList.appendChild(li);
+            });
         }
 
         function displayKeywords(elementId, keywords, type) {
@@ -616,9 +1045,10 @@
 
         // Enter 키로 분석 실행
         document.getElementById('urlInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                analyzeURL();
-            }
+            if (e.key === 'Enter') analyzeURL();
+        });
+        document.getElementById('productNameInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') findSimilarProducts();
         });
     </script>
 </body>

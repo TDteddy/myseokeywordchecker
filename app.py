@@ -89,5 +89,57 @@ def analyze():
         return jsonify({"success": False, "error": f"오류 발생: {str(e)}"})
 
 
+@app.route("/expand-keywords", methods=["POST"])
+def expand_keywords():
+    """키워드 확장 API"""
+    data = request.get_json()
+    keywords = data.get("keywords", [])
+    product_info = data.get("product_info", "")
+    model = data.get("model", "gpt-4o-mini")
+
+    if not keywords:
+        return jsonify({"success": False, "error": "키워드를 입력해주세요."})
+
+    try:
+        analyzer = SEOAnalyzer()
+        result = analyzer.expand_keywords(keywords, product_info, model)
+
+        if "error" in result:
+            return jsonify({"success": False, "error": result["error"]})
+
+        return jsonify({"success": True, "expansion": result})
+
+    except ValueError as e:
+        return jsonify({"success": False, "error": f"API 키 오류: {str(e)}"})
+    except Exception as e:
+        return jsonify({"success": False, "error": f"오류 발생: {str(e)}"})
+
+
+@app.route("/similar-products", methods=["POST"])
+def similar_products():
+    """비슷한 제품 검색 API"""
+    data = request.get_json()
+    product_name = data.get("product_name", "").strip()
+    category = data.get("category", "")
+    model = data.get("model", "gpt-4o-mini")
+
+    if not product_name:
+        return jsonify({"success": False, "error": "제품명을 입력해주세요."})
+
+    try:
+        analyzer = SEOAnalyzer()
+        result = analyzer.find_similar_products(product_name, category, model)
+
+        if "error" in result:
+            return jsonify({"success": False, "error": result["error"]})
+
+        return jsonify({"success": True, "similar": result})
+
+    except ValueError as e:
+        return jsonify({"success": False, "error": f"API 키 오류: {str(e)}"})
+    except Exception as e:
+        return jsonify({"success": False, "error": f"오류 발생: {str(e)}"})
+
+
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5000)
