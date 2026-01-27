@@ -185,6 +185,7 @@
             background: rgba(255, 255, 255, 0.03);
             padding: 15px;
             border-radius: 10px;
+            overflow: hidden;
         }
 
         .info-item label {
@@ -197,6 +198,17 @@
         .info-item span {
             font-size: 1.1rem;
             font-weight: 500;
+            display: block;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .info-item span.url-text {
+            position: relative;
+            white-space: nowrap;
+            mask-image: linear-gradient(to right, black 85%, transparent 100%);
+            -webkit-mask-image: linear-gradient(to right, black 85%, transparent 100%);
         }
 
         .keywords-section {
@@ -378,7 +390,7 @@
                 <div class="info-grid">
                     <div class="info-item">
                         <label>분석 URL</label>
-                        <span id="resultUrl">-</span>
+                        <span id="resultUrl" class="url-text" title="">-</span>
                     </div>
                     <div class="info-item">
                         <label>페이지 제목</label>
@@ -537,7 +549,9 @@
             results.classList.add('active');
 
             // 기본 정보
-            document.getElementById('resultUrl').textContent = data.url || '-';
+            const resultUrlEl = document.getElementById('resultUrl');
+            resultUrlEl.textContent = data.url || '-';
+            resultUrlEl.title = data.url || '';
             document.getElementById('resultTitle').textContent = data.scrape_info?.title || '-';
             document.getElementById('resultInternal').textContent = data.scrape_info?.internal_links + '개' || '-';
             document.getElementById('resultExternal').textContent = data.scrape_info?.external_links + '개' || '-';
