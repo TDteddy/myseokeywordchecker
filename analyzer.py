@@ -146,7 +146,14 @@ class SEOAnalyzer:
         "content_relevance": "상/중/하",
         "overall": "상/중/하"
     }},
-    "recommendations": ["SEO 개선을 위한 제안사항 3-5개"],
+    "recommendations": [
+        {{
+            "category": "개선 항목 (예: Title, Meta Description, 헤딩 구조 등)",
+            "current": "현재 상태 설명 (예: 현재 Title이 80자로 너무 김)",
+            "suggestion": "개선 제안 (예: 50-60자 이내로 줄이고 핵심 키워드를 앞에 배치)",
+            "priority": "높음/중간/낮음"
+        }}
+    ],
     "keyword_density_estimate": {{
         "키워드1": "추정 밀도 %",
         "키워드2": "추정 밀도 %"

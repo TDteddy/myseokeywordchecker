@@ -387,6 +387,102 @@
             border-left-color: #00ff88;
         }
 
+        .recommendation-card {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-left: 4px solid #00d9ff;
+        }
+
+        .recommendation-card.priority-high {
+            border-left-color: #ff5252;
+        }
+
+        .recommendation-card.priority-medium {
+            border-left-color: #ffc107;
+        }
+
+        .recommendation-card.priority-low {
+            border-left-color: #00ff88;
+        }
+
+        .recommendation-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .recommendation-category {
+            font-weight: 600;
+            color: #00d9ff;
+            font-size: 1rem;
+        }
+
+        .recommendation-priority {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .recommendation-priority.high {
+            background: rgba(255, 82, 82, 0.2);
+            color: #ff5252;
+        }
+
+        .recommendation-priority.medium {
+            background: rgba(255, 193, 7, 0.2);
+            color: #ffc107;
+        }
+
+        .recommendation-priority.low {
+            background: rgba(0, 255, 136, 0.2);
+            color: #00ff88;
+        }
+
+        .recommendation-current {
+            background: rgba(255, 82, 82, 0.1);
+            border: 1px solid rgba(255, 82, 82, 0.2);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+        }
+
+        .recommendation-current-label {
+            color: #ff6b6b;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .recommendation-current-text {
+            color: #ccd6f6;
+            font-size: 0.95rem;
+        }
+
+        .recommendation-suggestion {
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid rgba(0, 255, 136, 0.2);
+            border-radius: 8px;
+            padding: 12px;
+        }
+
+        .recommendation-suggestion-label {
+            color: #00ff88;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .recommendation-suggestion-text {
+            color: #ccd6f6;
+            font-size: 0.95rem;
+        }
+
         .summary {
             font-size: 1.05rem;
             line-height: 1.7;
@@ -595,7 +691,7 @@
 
                 <div class="card" id="recommendationsCard">
                     <h2>개선 제안</h2>
-                    <ul class="recommendations" id="recommendations"></ul>
+                    <div id="recommendations"></div>
                 </div>
 
                 <div class="card" id="summaryCard">
@@ -926,12 +1022,37 @@
             setScoreBadge('scoreContent', seoScore.content_relevance);
             setScoreBadge('scoreOverall', seoScore.overall);
 
-            const recommendationsList = document.getElementById('recommendations');
-            recommendationsList.innerHTML = '';
+            const recommendationsContainer = document.getElementById('recommendations');
+            recommendationsContainer.innerHTML = '';
             (analysis.recommendations || []).forEach(rec => {
-                const li = document.createElement('li');
-                li.textContent = rec;
-                recommendationsList.appendChild(li);
+                // 새 형식 (객체) 또는 구 형식 (문자열) 모두 지원
+                if (typeof rec === 'object') {
+                    const priorityClass = (rec.priority || '').includes('높') ? 'high' :
+                                         (rec.priority || '').includes('중') ? 'medium' : 'low';
+                    const card = document.createElement('div');
+                    card.className = `recommendation-card priority-${priorityClass}`;
+                    card.innerHTML = `
+                        <div class="recommendation-header">
+                            <span class="recommendation-category">${rec.category || '일반'}</span>
+                            <span class="recommendation-priority ${priorityClass}">${rec.priority || '중간'}</span>
+                        </div>
+                        <div class="recommendation-current">
+                            <span class="recommendation-current-label">현재 상태</span>
+                            <span class="recommendation-current-text">${rec.current || '-'}</span>
+                        </div>
+                        <div class="recommendation-suggestion">
+                            <span class="recommendation-suggestion-label">개선 제안</span>
+                            <span class="recommendation-suggestion-text">${rec.suggestion || '-'}</span>
+                        </div>
+                    `;
+                    recommendationsContainer.appendChild(card);
+                } else {
+                    // 구 형식 (문자열) 지원
+                    const li = document.createElement('div');
+                    li.className = 'recommendation-card';
+                    li.innerHTML = `<div class="recommendation-suggestion"><span class="recommendation-suggestion-text">${rec}</span></div>`;
+                    recommendationsContainer.appendChild(li);
+                }
             });
 
             document.getElementById('analysisSummary').textContent = analysis.analysis_summary || '-';
