@@ -492,6 +492,202 @@
             color: #ccd6f6;
         }
 
+        /* HTML 코드 개선 제안 스타일 */
+        .html-recommendation {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-left: 4px solid #00d9ff;
+        }
+
+        .html-recommendation.priority-high {
+            border-left-color: #ff5252;
+        }
+
+        .html-recommendation.priority-medium {
+            border-left-color: #ffc107;
+        }
+
+        .html-recommendation.priority-low {
+            border-left-color: #00ff88;
+        }
+
+        .html-rec-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .html-rec-category {
+            font-weight: 600;
+            color: #00d9ff;
+            font-size: 1.1rem;
+        }
+
+        .html-rec-priority {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .html-rec-priority.high {
+            background: rgba(255, 82, 82, 0.2);
+            color: #ff5252;
+        }
+
+        .html-rec-priority.medium {
+            background: rgba(255, 193, 7, 0.2);
+            color: #ffc107;
+        }
+
+        .html-rec-priority.low {
+            background: rgba(0, 255, 136, 0.2);
+            color: #00ff88;
+        }
+
+        .html-code-block {
+            margin-bottom: 15px;
+        }
+
+        .html-code-label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .html-code-label.current {
+            color: #ff6b6b;
+        }
+
+        .html-code-label.recommended {
+            color: #00ff88;
+        }
+
+        .html-code-label::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .html-code-label.current::before {
+            background: #ff6b6b;
+        }
+
+        .html-code-label.recommended::before {
+            background: #00ff88;
+        }
+
+        .code-container {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 15px;
+            overflow-x: auto;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .code-container.current {
+            border-color: rgba(255, 82, 82, 0.3);
+        }
+
+        .code-container.recommended {
+            border-color: rgba(0, 255, 136, 0.3);
+        }
+
+        .code-container code {
+            font-family: 'Fira Code', 'Monaco', 'Consolas', monospace;
+            font-size: 0.9rem;
+            color: #e6e6e6;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .html-rec-reason {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .html-rec-reason label {
+            display: block;
+            color: #8892b0;
+            font-size: 0.8rem;
+            margin-bottom: 5px;
+        }
+
+        .html-rec-reason p {
+            color: #ccd6f6;
+            font-size: 0.95rem;
+            margin: 0;
+        }
+
+        .html-rec-effect {
+            background: rgba(0, 217, 255, 0.1);
+            padding: 10px 12px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .html-rec-effect::before {
+            content: '✨';
+        }
+
+        .html-rec-effect p {
+            color: #00d9ff;
+            font-size: 0.9rem;
+            margin: 0;
+        }
+
+        .strategy-item {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+
+        .strategy-item label {
+            display: block;
+            color: #8892b0;
+            font-size: 0.85rem;
+            margin-bottom: 8px;
+        }
+
+        .strategy-item p {
+            color: #ccd6f6;
+            font-size: 1rem;
+            margin: 0;
+            line-height: 1.6;
+        }
+
+        .quick-wins-list {
+            list-style: none;
+        }
+
+        .quick-wins-list li {
+            padding: 12px 15px;
+            background: linear-gradient(90deg, rgba(0, 255, 136, 0.1), transparent);
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border-left: 3px solid #00ff88;
+            color: #ccd6f6;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .quick-wins-list li::before {
+            content: '⚡';
+        }
+
         .error-message {
             background: rgba(255, 82, 82, 0.1);
             border: 1px solid rgba(255, 82, 82, 0.3);
@@ -610,6 +806,11 @@
                     <div class="check">✓</div>
                     <span class="step-text">4. 경쟁 제품 분석</span>
                 </div>
+                <div class="progress-step" id="step5">
+                    <div class="spinner-small"></div>
+                    <div class="check">✓</div>
+                    <span class="step-text">5. 종합 개선제안</span>
+                </div>
             </div>
         </div>
 
@@ -699,11 +900,6 @@
                         <span class="score-badge" id="scoreOverall">-</span>
                     </div>
                 </div>
-            </div>
-
-            <div class="card" id="recommendationsCard">
-                <h2>개선 제안</h2>
-                <div id="recommendations"></div>
             </div>
 
             <div class="card" id="summaryCard">
@@ -800,6 +996,61 @@
                     <ul class="recommendations" id="seoRecommendations"></ul>
                 </div>
             </div>
+
+            <!-- 4. 종합 개선 제안 -->
+            <div id="comprehensiveSection" style="display: none;">
+                <h2 class="section-title">종합 개선 제안</h2>
+
+                <div class="card" id="htmlRecommendationsCard">
+                    <h2>HTML 태그 개선 제안</h2>
+                    <div id="htmlRecommendations"></div>
+                </div>
+
+                <div class="card">
+                    <h2>키워드 전략</h2>
+                    <div class="keywords-section">
+                        <h3>집중 키워드</h3>
+                        <div class="keyword-tags" id="primaryFocusKeywords"></div>
+                    </div>
+                    <div class="keywords-section">
+                        <h3>2차 타겟 키워드</h3>
+                        <div class="keyword-tags" id="secondaryTargetKeywords"></div>
+                    </div>
+                    <div class="keywords-section">
+                        <h3>콘텐츠 갭 (추가 필요 키워드)</h3>
+                        <div class="keyword-tags" id="contentGapKeywords"></div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>콘텐츠 개선 제안</h2>
+                    <ul class="content-ideas" id="contentRecommendations"></ul>
+                </div>
+
+                <div class="card">
+                    <h2>경쟁 전략</h2>
+                    <div class="competitive-strategy">
+                        <div class="strategy-item">
+                            <label>차별화 전략</label>
+                            <p id="differentiationStrategy">-</p>
+                        </div>
+                        <div class="keywords-section">
+                            <h3>타겟 경쟁 키워드</h3>
+                            <div class="keyword-tags" id="competitiveKeywords"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>즉시 적용 가능한 개선사항 (Quick Wins)</h2>
+                    <ul class="quick-wins-list" id="quickWins"></ul>
+                </div>
+
+                <div class="card">
+                    <h2>전체 개선 전략 요약</h2>
+                    <p class="summary" id="overallSummary">-</p>
+                </div>
+            </div>
         </div>
 
         <footer>
@@ -833,6 +1084,7 @@
             results.classList.remove('active');
             document.getElementById('expandSection').style.display = 'none';
             document.getElementById('similarSection').style.display = 'none';
+            document.getElementById('comprehensiveSection').style.display = 'none';
             resetProgress();
 
             try {
@@ -900,9 +1152,11 @@
                 });
 
                 // 비슷한 제품 결과 처리
+                let similarResult = {};
                 similarPromise.then(similarData => {
                     setStepDone('step4');
                     if (similarData.success) {
+                        similarResult = similarData.similar;
                         displaySimilarResults(similarData.similar);
                         document.getElementById('similarSection').style.display = 'block';
                     }
@@ -912,7 +1166,44 @@
                 });
 
                 // 모든 작업 완료 대기
-                await Promise.allSettled([expandPromise, similarPromise]);
+                const [expandResult, similarResultSettled] = await Promise.allSettled([expandPromise, similarPromise]);
+
+                // 키워드 확장 결과 추출
+                let keywordExpansion = {};
+                if (expandResult.status === 'fulfilled' && expandResult.value.success) {
+                    keywordExpansion = expandResult.value.expansion;
+                }
+
+                // 비슷한 제품 결과 추출
+                if (similarResultSettled.status === 'fulfilled' && similarResultSettled.value.success) {
+                    similarResult = similarResultSettled.value.similar;
+                }
+
+                // Step 5: 종합 개선제안 API 호출
+                setStepLoading('step5');
+                try {
+                    const comprehensiveResponse = await fetch('/comprehensive-recommendations', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            seo_data: analyzeData.seo_data,
+                            analysis_result: analyzeData.analysis,
+                            keyword_expansion: keywordExpansion,
+                            similar_products: similarResult,
+                            model: model === 'gpt-4o' ? 'gpt-4o' : 'gpt-4o'  // 종합 제안은 정확도를 위해 gpt-4o 사용
+                        }),
+                    });
+                    const comprehensiveData = await comprehensiveResponse.json();
+
+                    setStepDone('step5');
+                    if (comprehensiveData.success) {
+                        displayComprehensiveResults(comprehensiveData.recommendations);
+                        document.getElementById('comprehensiveSection').style.display = 'block';
+                    }
+                } catch (err) {
+                    setStepDone('step5');
+                    console.error('종합 개선제안 오류:', err);
+                }
 
             } catch (error) {
                 showError(error.message);
@@ -922,7 +1213,7 @@
         }
 
         function resetProgress() {
-            ['step1', 'step2', 'step3', 'step4'].forEach(id => {
+            ['step1', 'step2', 'step3', 'step4', 'step5'].forEach(id => {
                 const el = document.getElementById(id);
                 el.classList.remove('loading', 'done');
             });
@@ -968,37 +1259,6 @@
             setScoreBadge('scoreHeading', seoScore.heading_structure);
             setScoreBadge('scoreContent', seoScore.content_relevance);
             setScoreBadge('scoreOverall', seoScore.overall);
-
-            const recommendationsContainer = document.getElementById('recommendations');
-            recommendationsContainer.innerHTML = '';
-            (analysis.recommendations || []).forEach(rec => {
-                if (typeof rec === 'object') {
-                    const priorityClass = (rec.priority || '').includes('높') ? 'high' :
-                                         (rec.priority || '').includes('중') ? 'medium' : 'low';
-                    const card = document.createElement('div');
-                    card.className = `recommendation-card priority-${priorityClass}`;
-                    card.innerHTML = `
-                        <div class="recommendation-header">
-                            <span class="recommendation-category">${rec.category || '일반'}</span>
-                            <span class="recommendation-priority ${priorityClass}">${rec.priority || '중간'}</span>
-                        </div>
-                        <div class="recommendation-current">
-                            <span class="recommendation-current-label">현재 상태</span>
-                            <span class="recommendation-current-text">${rec.current || '-'}</span>
-                        </div>
-                        <div class="recommendation-suggestion">
-                            <span class="recommendation-suggestion-label">개선 제안</span>
-                            <span class="recommendation-suggestion-text">${rec.suggestion || '-'}</span>
-                        </div>
-                    `;
-                    recommendationsContainer.appendChild(card);
-                } else {
-                    const li = document.createElement('div');
-                    li.className = 'recommendation-card';
-                    li.innerHTML = `<div class="recommendation-suggestion"><span class="recommendation-suggestion-text">${rec}</span></div>`;
-                    recommendationsContainer.appendChild(li);
-                }
-            });
 
             document.getElementById('analysisSummary').textContent = analysis.analysis_summary || '-';
         }
@@ -1071,6 +1331,84 @@
                 li.textContent = rec;
                 recList.appendChild(li);
             });
+        }
+
+        function displayComprehensiveResults(data) {
+            // HTML 태그 개선 제안 표시
+            const htmlContainer = document.getElementById('htmlRecommendations');
+            htmlContainer.innerHTML = '';
+            (data.recommendations || []).forEach(rec => {
+                const priorityClass = (rec.priority || '').includes('높') ? 'high' :
+                                     (rec.priority || '').includes('중') ? 'medium' : 'low';
+                const div = document.createElement('div');
+                div.className = `html-recommendation priority-${priorityClass}`;
+                div.innerHTML = `
+                    <div class="html-rec-header">
+                        <span class="html-rec-category">${escapeHtml(rec.category || '일반')}</span>
+                        <span class="html-rec-priority ${priorityClass}">${escapeHtml(rec.priority || '중간')}</span>
+                    </div>
+                    <div class="html-code-block">
+                        <div class="html-code-label current">현재 HTML</div>
+                        <div class="code-container current">
+                            <code>${escapeHtml(rec.current_html || '-')}</code>
+                        </div>
+                    </div>
+                    <div class="html-code-block">
+                        <div class="html-code-label recommended">권장 HTML</div>
+                        <div class="code-container recommended">
+                            <code>${escapeHtml(rec.recommended_html || '-')}</code>
+                        </div>
+                    </div>
+                    <div class="html-rec-reason">
+                        <label>변경 이유</label>
+                        <p>${escapeHtml(rec.reason || '-')}</p>
+                    </div>
+                    <div class="html-rec-effect">
+                        <p>${escapeHtml(rec.expected_effect || '-')}</p>
+                    </div>
+                `;
+                htmlContainer.appendChild(div);
+            });
+
+            // 키워드 전략 표시
+            const keywordStrategy = data.keyword_strategy || {};
+            displayKeywords('primaryFocusKeywords', keywordStrategy.primary_focus || [], 'main');
+            displayKeywords('secondaryTargetKeywords', keywordStrategy.secondary_targets || [], 'secondary');
+            displayKeywords('contentGapKeywords', keywordStrategy.content_gaps || [], 'buyer');
+
+            // 콘텐츠 개선 제안
+            const contentRecList = document.getElementById('contentRecommendations');
+            contentRecList.innerHTML = '';
+            (data.content_recommendations || []).forEach(rec => {
+                const li = document.createElement('li');
+                li.textContent = rec;
+                contentRecList.appendChild(li);
+            });
+
+            // 경쟁 전략
+            const competitiveStrategy = data.competitive_strategy || {};
+            document.getElementById('differentiationStrategy').textContent =
+                competitiveStrategy.differentiation || '-';
+            displayKeywords('competitiveKeywords', competitiveStrategy.keywords_to_target || [], 'purple');
+
+            // Quick Wins
+            const quickWinsList = document.getElementById('quickWins');
+            quickWinsList.innerHTML = '';
+            (data.quick_wins || []).forEach(win => {
+                const li = document.createElement('li');
+                li.textContent = win;
+                quickWinsList.appendChild(li);
+            });
+
+            // 전체 요약
+            document.getElementById('overallSummary').textContent =
+                data.overall_summary || '-';
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
         }
 
         function displayKeywords(elementId, keywords, type) {

@@ -278,6 +278,155 @@ class SEOAnalyzer:
         except Exception as e:
             return {"error": str(e)}
 
+    def generate_comprehensive_recommendations(
+        self,
+        seo_data: dict,
+        analysis_result: dict,
+        keyword_expansion: dict,
+        similar_products: dict,
+        model: str = "gpt-4o",
+    ) -> dict:
+        """모든 분석 결과를 종합하여 구체적인 개선 제안을 생성합니다."""
+
+        # 현재 HTML 태그들 정리
+        current_title = seo_data.get("title", "")
+        current_meta = seo_data.get("meta_description", "")
+        current_h1 = seo_data.get("headings", {}).get("h1", [])
+        current_h2 = seo_data.get("headings", {}).get("h2", [])
+
+        # 키워드 정보 정리
+        main_keywords = analysis_result.get("main_keywords", [])
+        secondary_keywords = analysis_result.get("secondary_keywords", [])
+        expanded_keywords = keyword_expansion.get("related_keywords", [])[:10]
+        buyer_keywords = keyword_expansion.get("buyer_intent_keywords", [])[:5]
+        question_keywords = keyword_expansion.get("question_keywords", [])[:5]
+
+        # 경쟁 제품 정보
+        competitor_brands = similar_products.get("competitor_brands", [])[:5]
+        alternative_searches = similar_products.get("alternative_searches", [])[:5]
+
+        prompt = f"""다음은 웹페이지의 SEO 분석 결과입니다. 모든 정보를 종합하여 구체적이고 실행 가능한 개선 제안을 해주세요.
+
+## 현재 페이지 정보
+- URL: {seo_data.get('url', '')}
+- 현재 Title 태그: {current_title}
+- 현재 Meta Description: {current_meta}
+- 현재 H1 태그: {', '.join(current_h1) if current_h1 else '없음'}
+- 현재 H2 태그: {', '.join(current_h2[:5]) if current_h2 else '없음'}
+
+## 분석된 키워드
+- 메인 키워드: {', '.join(main_keywords)}
+- 보조 키워드: {', '.join(secondary_keywords[:10])}
+
+## 확장 키워드
+- 연관 키워드: {', '.join(expanded_keywords)}
+- 구매 의도 키워드: {', '.join(buyer_keywords)}
+- 질문형 키워드: {', '.join(question_keywords)}
+
+## 경쟁 정보
+- 경쟁 브랜드: {', '.join(competitor_brands)}
+- 대체 검색어: {', '.join(alternative_searches)}
+
+---
+
+위 정보를 종합하여 다음 JSON 형식으로 구체적인 개선 제안을 해주세요.
+중요: 각 제안에는 반드시 현재 HTML 코드와 개선된 HTML 코드 예시를 포함해야 합니다.
+
+{{
+    "recommendations": [
+        {{
+            "category": "Title 태그",
+            "priority": "높음/중간/낮음",
+            "current_html": "현재 사용 중인 HTML 태그 (예: <title>현재 제목</title>)",
+            "recommended_html": "개선 제안 HTML 태그 (예: <title>개선된 제목 - 핵심 키워드 포함</title>)",
+            "reason": "왜 이렇게 변경해야 하는지 구체적인 이유",
+            "expected_effect": "예상되는 SEO 효과"
+        }},
+        {{
+            "category": "Meta Description",
+            "priority": "높음/중간/낮음",
+            "current_html": "<meta name=\\"description\\" content=\\"현재 설명\\">",
+            "recommended_html": "<meta name=\\"description\\" content=\\"개선된 설명 - 키워드와 CTA 포함\\">",
+            "reason": "변경 이유",
+            "expected_effect": "예상 효과"
+        }},
+        {{
+            "category": "H1 태그",
+            "priority": "높음/중간/낮음",
+            "current_html": "<h1>현재 제목</h1>",
+            "recommended_html": "<h1>개선된 제목</h1>",
+            "reason": "변경 이유",
+            "expected_effect": "예상 효과"
+        }},
+        {{
+            "category": "헤딩 구조",
+            "priority": "높음/중간/낮음",
+            "current_html": "현재 헤딩 구조 설명",
+            "recommended_html": "권장 헤딩 구조 예시 (H1 → H2 → H3)",
+            "reason": "변경 이유",
+            "expected_effect": "예상 효과"
+        }},
+        {{
+            "category": "Schema Markup",
+            "priority": "중간/낮음",
+            "current_html": "현재 상태 (없음 또는 있음)",
+            "recommended_html": "<script type=\\"application/ld+json\\">추천 스키마 예시</script>",
+            "reason": "변경 이유",
+            "expected_effect": "예상 효과"
+        }}
+    ],
+    "keyword_strategy": {{
+        "primary_focus": ["집중해야 할 핵심 키워드 3-5개"],
+        "secondary_targets": ["2차 타겟 키워드 5-10개"],
+        "content_gaps": ["현재 페이지에서 다루지 않지만 추가해야 할 키워드/주제"]
+    }},
+    "content_recommendations": [
+        "콘텐츠 개선 제안 1",
+        "콘텐츠 개선 제안 2",
+        "콘텐츠 개선 제안 3"
+    ],
+    "competitive_strategy": {{
+        "differentiation": "경쟁사 대비 차별화 전략",
+        "keywords_to_target": ["경쟁 키워드 타겟팅 제안"]
+    }},
+    "quick_wins": [
+        "즉시 적용 가능한 빠른 개선 사항 1",
+        "즉시 적용 가능한 빠른 개선 사항 2",
+        "즉시 적용 가능한 빠른 개선 사항 3"
+    ],
+    "overall_summary": "전체 개선 전략 요약 (2-3문장)"
+}}"""
+
+        try:
+            response = self.client.chat.completions.create(
+                model=model,
+                messages=[
+                    {
+                        "role": "system",
+                        "content": """당신은 SEO 전문가이자 웹 개발 컨설턴트입니다.
+웹페이지의 SEO 요소들을 분석하고 구체적인 HTML 코드 예시와 함께 개선 방안을 제안합니다.
+
+제안 시 다음을 고려하세요:
+1. 실제로 적용 가능한 HTML 코드 제공
+2. 검색 엔진 최적화 모범 사례
+3. 사용자 클릭률(CTR) 향상
+4. 경쟁사 대비 차별화
+5. 키워드 자연스러운 배치
+
+모든 제안은 한국어로 작성하되, HTML 코드는 정확한 문법으로 작성해주세요.""",
+                    },
+                    {"role": "user", "content": prompt},
+                ],
+                temperature=0.4,
+                response_format={"type": "json_object"},
+            )
+
+            result = json.loads(response.choices[0].message.content)
+            return result
+
+        except Exception as e:
+            return {"error": str(e)}
+
     def get_quick_analysis(self, seo_data: dict, model: str = "gpt-4o-mini") -> str:
         """간단한 텍스트 형식의 분석 결과를 반환합니다."""
 

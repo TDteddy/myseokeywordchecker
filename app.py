@@ -70,6 +70,7 @@ def analyze():
                     "success": True,
                     "url": url,
                     "scrape_info": scrape_info,
+                    "seo_data": seo_data,
                     "analysis": analysis_result,
                 }
             )
@@ -134,6 +135,40 @@ def similar_products():
             return jsonify({"success": False, "error": result["error"]})
 
         return jsonify({"success": True, "similar": result})
+
+    except ValueError as e:
+        return jsonify({"success": False, "error": f"API 키 오류: {str(e)}"})
+    except Exception as e:
+        return jsonify({"success": False, "error": f"오류 발생: {str(e)}"})
+
+
+@app.route("/comprehensive-recommendations", methods=["POST"])
+def comprehensive_recommendations():
+    """종합 개선제안 API"""
+    data = request.get_json()
+    seo_data = data.get("seo_data", {})
+    analysis_result = data.get("analysis_result", {})
+    keyword_expansion = data.get("keyword_expansion", {})
+    similar_products = data.get("similar_products", {})
+    model = data.get("model", "gpt-4o")
+
+    if not seo_data or not analysis_result:
+        return jsonify({"success": False, "error": "분석 데이터가 필요합니다."})
+
+    try:
+        analyzer = SEOAnalyzer()
+        result = analyzer.generate_comprehensive_recommendations(
+            seo_data=seo_data,
+            analysis_result=analysis_result,
+            keyword_expansion=keyword_expansion,
+            similar_products=similar_products,
+            model=model,
+        )
+
+        if "error" in result:
+            return jsonify({"success": False, "error": result["error"]})
+
+        return jsonify({"success": True, "recommendations": result})
 
     except ValueError as e:
         return jsonify({"success": False, "error": f"API 키 오류: {str(e)}"})
