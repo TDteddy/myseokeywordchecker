@@ -801,6 +801,155 @@
             display: block;
         }
 
+        /* 키워드 선택 분석 스타일 */
+        .keyword-analysis-section {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .main-keyword-box {
+            background: linear-gradient(135deg, rgba(0, 217, 255, 0.2), rgba(0, 255, 136, 0.2));
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .main-keyword-box label {
+            display: block;
+            color: #8892b0;
+            font-size: 0.85rem;
+            margin-bottom: 10px;
+        }
+
+        .main-keyword-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #00d9ff;
+        }
+
+        .selection-reason-box {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .selection-reason-box label {
+            display: block;
+            color: #8892b0;
+            font-size: 0.85rem;
+            margin-bottom: 8px;
+        }
+
+        .selection-reason-box p {
+            color: #ccd6f6;
+            line-height: 1.6;
+            margin: 0;
+        }
+
+        .keyword-sources {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .keyword-source-item {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .keyword-source-item h4 {
+            color: #8892b0;
+            font-size: 0.85rem;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+
+        .rejected-keywords-section {
+            background: rgba(255, 82, 82, 0.05);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 82, 82, 0.1);
+        }
+
+        .rejected-keywords-section h4 {
+            color: #ff6b6b;
+            font-size: 0.9rem;
+            margin-bottom: 12px;
+        }
+
+        .rejected-keyword-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 6px;
+            margin-bottom: 8px;
+        }
+
+        .rejected-keyword-item .keyword {
+            color: #ff6b6b;
+            font-weight: 500;
+        }
+
+        .rejected-keyword-item .reason {
+            color: #8892b0;
+            font-size: 0.85rem;
+        }
+
+        .placement-strategy {
+            background: rgba(0, 217, 255, 0.05);
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid rgba(0, 217, 255, 0.1);
+        }
+
+        .placement-strategy label {
+            display: block;
+            color: #00d9ff;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .placement-strategy p {
+            color: #ccd6f6;
+            line-height: 1.6;
+            margin: 0;
+        }
+
+        .keywords-used-section {
+            margin-top: 10px;
+            padding: 10px;
+            background: rgba(0, 217, 255, 0.05);
+            border-radius: 8px;
+            border-left: 3px solid #00d9ff;
+        }
+
+        .keywords-used-section h5 {
+            color: #00d9ff;
+            font-size: 0.85rem;
+            margin-bottom: 8px;
+        }
+
+        .keywords-used-section .rationale {
+            color: #8892b0;
+            font-size: 0.85rem;
+            margin-top: 8px;
+            font-style: italic;
+        }
+
+        @media (max-width: 768px) {
+            .keyword-analysis-section {
+                grid-template-columns: 1fr;
+            }
+        }
+
         .error-message {
             background: rgba(255, 82, 82, 0.1);
             border: 1px solid rgba(255, 82, 82, 0.3);
@@ -1113,6 +1262,51 @@
             <!-- 4. 종합 개선 제안 -->
             <div id="comprehensiveSection" style="display: none;">
                 <h2 class="section-title">종합 개선 제안</h2>
+
+                <div class="card" id="keywordSelectionCard">
+                    <h2>키워드 선택 분석</h2>
+                    <p class="card-description">AI가 어떤 키워드를 왜 선택했는지 근거를 확인하세요.</p>
+
+                    <div class="keyword-analysis-section">
+                        <div class="main-keyword-box">
+                            <label>선택된 메인 키워드</label>
+                            <span class="main-keyword-value" id="selectedMainKeyword">-</span>
+                        </div>
+                        <div class="selection-reason-box">
+                            <label>선택 이유</label>
+                            <p id="selectionReason">-</p>
+                        </div>
+                    </div>
+
+                    <div class="keyword-sources">
+                        <div class="keyword-source-item">
+                            <h4>원본 분석에서 채택</h4>
+                            <div class="keyword-tags" id="fromOriginalKeywords"></div>
+                        </div>
+                        <div class="keyword-source-item">
+                            <h4>확장 키워드에서 채택</h4>
+                            <div class="keyword-tags" id="fromExpandedKeywords"></div>
+                        </div>
+                        <div class="keyword-source-item">
+                            <h4>구매 의도 키워드에서 채택</h4>
+                            <div class="keyword-tags" id="fromBuyerIntent"></div>
+                        </div>
+                        <div class="keyword-source-item">
+                            <h4>경쟁 분석에서 채택</h4>
+                            <div class="keyword-tags" id="fromCompetitorAnalysis"></div>
+                        </div>
+                    </div>
+
+                    <div class="rejected-keywords-section">
+                        <h4>제외된 키워드 (이유 포함)</h4>
+                        <div id="rejectedKeywords"></div>
+                    </div>
+
+                    <div class="placement-strategy">
+                        <label>키워드 배치 전략</label>
+                        <p id="keywordPlacementStrategy">-</p>
+                    </div>
+                </div>
 
                 <div class="card" id="htmlRecommendationsCard">
                     <h2>HTML 태그 개선 제안</h2>
@@ -1463,6 +1657,34 @@
         }
 
         function displayComprehensiveResults(data) {
+            // 키워드 선택 분석 표시
+            const keywordSelection = data.keyword_selection_analysis || {};
+            document.getElementById('selectedMainKeyword').textContent =
+                keywordSelection.selected_main_keyword || '-';
+            document.getElementById('selectionReason').textContent =
+                keywordSelection.selection_reason || '-';
+
+            displayKeywords('fromOriginalKeywords', keywordSelection.from_original_keywords || [], 'main');
+            displayKeywords('fromExpandedKeywords', keywordSelection.from_expanded_keywords || [], 'secondary');
+            displayKeywords('fromBuyerIntent', keywordSelection.from_buyer_intent || [], 'buyer');
+            displayKeywords('fromCompetitorAnalysis', keywordSelection.from_competitor_analysis || [], 'purple');
+
+            // 제외된 키워드 표시
+            const rejectedContainer = document.getElementById('rejectedKeywords');
+            rejectedContainer.innerHTML = '';
+            (keywordSelection.rejected_keywords || []).forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'rejected-keyword-item';
+                div.innerHTML = `
+                    <span class="keyword">${escapeHtml(item.keyword || '')}</span>
+                    <span class="reason">${escapeHtml(item.reason || '')}</span>
+                `;
+                rejectedContainer.appendChild(div);
+            });
+
+            document.getElementById('keywordPlacementStrategy').textContent =
+                keywordSelection.keyword_placement_strategy || '-';
+
             // HTML 태그 개선 제안 표시
             const htmlContainer = document.getElementById('htmlRecommendations');
             htmlContainer.innerHTML = '';
@@ -1471,6 +1693,13 @@
                                      (rec.priority || '').includes('중') ? 'medium' : 'low';
                 const div = document.createElement('div');
                 div.className = `html-recommendation priority-${priorityClass}`;
+                const keywordsUsedHtml = (rec.keywords_used && rec.keywords_used.length > 0) ?
+                    `<div class="keywords-used-section">
+                        <h5>사용된 키워드</h5>
+                        <div class="keyword-tags">${rec.keywords_used.map(k => `<span class="keyword-tag main">${escapeHtml(k)}</span>`).join('')}</div>
+                        ${rec.keyword_rationale ? `<p class="rationale">${escapeHtml(rec.keyword_rationale)}</p>` : ''}
+                    </div>` : '';
+
                 div.innerHTML = `
                     <div class="html-rec-header">
                         <span class="html-rec-category">${escapeHtml(rec.category || '일반')}</span>
@@ -1489,6 +1718,7 @@
                         </div>
                         <button class="copy-btn" onclick="copyCode(this)">코드 복사</button>
                     </div>
+                    ${keywordsUsedHtml}
                     <div class="html-rec-reason">
                         <label>변경 이유</label>
                         <p>${escapeHtml(rec.reason || '-')}</p>

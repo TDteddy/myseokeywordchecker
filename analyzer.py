@@ -352,6 +352,8 @@ class SEOAnalyzer:
             "priority": "높음",
             "current_html": "<title>{current_title}</title>",
             "recommended_html": "<title>여기에 50-60자 이내의 최적화된 완성된 타이틀을 작성. 핵심 키워드를 앞에 배치하고, 브랜드명이나 | 구분자 활용</title>",
+            "keywords_used": ["이 Title에 포함한 키워드 목록"],
+            "keyword_rationale": "왜 이 키워드들을 선택했는지 설명 (검색량, 구매의도, 경쟁 키워드 고려 등)",
             "reason": "변경이 필요한 구체적인 이유",
             "expected_effect": "CTR 증가, 검색 순위 향상 등 예상 효과"
         }},
@@ -360,6 +362,8 @@ class SEOAnalyzer:
             "priority": "높음",
             "current_html": "<meta name=\\"description\\" content=\\"{current_meta if current_meta else ''}\\">",
             "recommended_html": "<meta name=\\"description\\" content=\\"여기에 150-160자 이내의 완성된 메타 설명 작성. 핵심 키워드 포함, 행동 유도 문구(CTA) 포함, 사용자가 클릭하고 싶게 만드는 매력적인 설명\\">",
+            "keywords_used": ["이 Meta에 포함한 키워드 목록"],
+            "keyword_rationale": "왜 이 키워드들을 선택했는지 (롱테일, 구매의도, 시맨틱 키워드 활용 등)",
             "reason": "변경 이유",
             "expected_effect": "예상 효과"
         }},
@@ -368,6 +372,8 @@ class SEOAnalyzer:
             "priority": "높음",
             "current_html": "<h1>{current_h1[0] if current_h1 else ''}</h1>",
             "recommended_html": "<h1>완성된 H1 제목 - 페이지의 핵심 주제를 명확히 전달</h1>",
+            "keywords_used": ["이 H1에 포함한 키워드 목록"],
+            "keyword_rationale": "키워드 선택 근거",
             "reason": "변경 이유",
             "expected_effect": "예상 효과"
         }},
@@ -396,6 +402,21 @@ class SEOAnalyzer:
             "expected_effect": "리치 스니펫 표시, 검색 결과 노출 개선"
         }}
     ],
+    "keyword_selection_analysis": {{
+        "selected_main_keyword": "최종 선택한 메인 키워드 1개",
+        "selection_reason": "이 메인 키워드를 선택한 이유 (검색의도, 페이지 내용 적합성, 경쟁 키워드 분석 결과 등)",
+        "from_original_keywords": ["원본 분석에서 채택한 키워드들"],
+        "from_expanded_keywords": ["키워드 확장에서 채택한 키워드들"],
+        "from_buyer_intent": ["구매 의도 키워드에서 채택한 것들"],
+        "from_competitor_analysis": ["경쟁 제품 분석에서 채택한 키워드들"],
+        "rejected_keywords": [
+            {{
+                "keyword": "채택하지 않은 키워드",
+                "reason": "제외 이유 (너무 경쟁 치열, 검색의도 불일치, 글자수 제한 등)"
+            }}
+        ],
+        "keyword_placement_strategy": "키워드 배치 전략 설명 (어디에 어떤 키워드를 왜 배치했는지)"
+    }},
     "keyword_strategy": {{
         "primary_focus": ["이 페이지에서 반드시 타겟해야 할 핵심 키워드 3-5개"],
         "secondary_targets": ["추가로 노릴 수 있는 2차 키워드 5-10개"],
