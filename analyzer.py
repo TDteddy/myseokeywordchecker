@@ -286,115 +286,159 @@ class SEOAnalyzer:
         similar_products: dict,
         model: str = "gpt-4o",
     ) -> dict:
-        """모든 분석 결과를 종합하여 구체적인 개선 제안을 생성합니다."""
+        """모든 분석 결과를 종합하여 바로 사용 가능한 개선 제안을 생성합니다."""
 
         # 현재 HTML 태그들 정리
         current_title = seo_data.get("title", "")
         current_meta = seo_data.get("meta_description", "")
         current_h1 = seo_data.get("headings", {}).get("h1", [])
         current_h2 = seo_data.get("headings", {}).get("h2", [])
+        body_text = seo_data.get("body_text", "")[:2000]
 
         # 키워드 정보 정리
         main_keywords = analysis_result.get("main_keywords", [])
         secondary_keywords = analysis_result.get("secondary_keywords", [])
+        longtail_keywords = analysis_result.get("long_tail_keywords", [])
         expanded_keywords = keyword_expansion.get("related_keywords", [])[:10]
         buyer_keywords = keyword_expansion.get("buyer_intent_keywords", [])[:5]
         question_keywords = keyword_expansion.get("question_keywords", [])[:5]
+        semantic_keywords = keyword_expansion.get("semantic_keywords", [])[:10]
 
         # 경쟁 제품 정보
         competitor_brands = similar_products.get("competitor_brands", [])[:5]
         alternative_searches = similar_products.get("alternative_searches", [])[:5]
+        similar_products_list = similar_products.get("similar_products", [])[:3]
 
-        prompt = f"""다음은 웹페이지의 SEO 분석 결과입니다. 모든 정보를 종합하여 구체적이고 실행 가능한 개선 제안을 해주세요.
+        prompt = f"""당신은 SEO 전문가입니다. 아래 정보를 분석하고, 사용자가 **복사해서 바로 붙여넣기만 하면 되는** 완성된 SEO 콘텐츠를 작성해주세요.
+
+⚠️ 중요: 모든 제안은 "~하세요", "~추천합니다" 같은 조언이 아니라, **실제로 사용할 완성된 텍스트**를 제공해야 합니다.
+
+---
 
 ## 현재 페이지 정보
 - URL: {seo_data.get('url', '')}
-- 현재 Title 태그: {current_title}
-- 현재 Meta Description: {current_meta}
-- 현재 H1 태그: {', '.join(current_h1) if current_h1 else '없음'}
-- 현재 H2 태그: {', '.join(current_h2[:5]) if current_h2 else '없음'}
+- 현재 Title: {current_title}
+- 현재 Meta Description: {current_meta if current_meta else '(없음)'}
+- 현재 H1: {current_h1[0] if current_h1 else '(없음)'}
+- 현재 H2들: {', '.join(current_h2[:5]) if current_h2 else '(없음)'}
+
+## 본문 내용 일부
+{body_text}
 
 ## 분석된 키워드
 - 메인 키워드: {', '.join(main_keywords)}
 - 보조 키워드: {', '.join(secondary_keywords[:10])}
+- 롱테일 키워드: {', '.join(longtail_keywords[:10])}
 
 ## 확장 키워드
 - 연관 키워드: {', '.join(expanded_keywords)}
+- 시맨틱 키워드: {', '.join(semantic_keywords)}
 - 구매 의도 키워드: {', '.join(buyer_keywords)}
 - 질문형 키워드: {', '.join(question_keywords)}
 
 ## 경쟁 정보
 - 경쟁 브랜드: {', '.join(competitor_brands)}
 - 대체 검색어: {', '.join(alternative_searches)}
+- 유사 제품: {', '.join([p.get('name', '') for p in similar_products_list]) if similar_products_list else '(없음)'}
 
 ---
 
-위 정보를 종합하여 다음 JSON 형식으로 구체적인 개선 제안을 해주세요.
-중요: 각 제안에는 반드시 현재 HTML 코드와 개선된 HTML 코드 예시를 포함해야 합니다.
+다음 JSON 형식으로 **바로 사용 가능한 완성된 콘텐츠**를 제공해주세요:
 
 {{
     "recommendations": [
         {{
             "category": "Title 태그",
-            "priority": "높음/중간/낮음",
-            "current_html": "현재 사용 중인 HTML 태그 (예: <title>현재 제목</title>)",
-            "recommended_html": "개선 제안 HTML 태그 (예: <title>개선된 제목 - 핵심 키워드 포함</title>)",
-            "reason": "왜 이렇게 변경해야 하는지 구체적인 이유",
-            "expected_effect": "예상되는 SEO 효과"
+            "priority": "높음",
+            "current_html": "<title>{current_title}</title>",
+            "recommended_html": "<title>여기에 50-60자 이내의 최적화된 완성된 타이틀을 작성. 핵심 키워드를 앞에 배치하고, 브랜드명이나 | 구분자 활용</title>",
+            "reason": "변경이 필요한 구체적인 이유",
+            "expected_effect": "CTR 증가, 검색 순위 향상 등 예상 효과"
         }},
         {{
             "category": "Meta Description",
-            "priority": "높음/중간/낮음",
-            "current_html": "<meta name=\\"description\\" content=\\"현재 설명\\">",
-            "recommended_html": "<meta name=\\"description\\" content=\\"개선된 설명 - 키워드와 CTA 포함\\">",
+            "priority": "높음",
+            "current_html": "<meta name=\\"description\\" content=\\"{current_meta if current_meta else ''}\\">",
+            "recommended_html": "<meta name=\\"description\\" content=\\"여기에 150-160자 이내의 완성된 메타 설명 작성. 핵심 키워드 포함, 행동 유도 문구(CTA) 포함, 사용자가 클릭하고 싶게 만드는 매력적인 설명\\">",
             "reason": "변경 이유",
             "expected_effect": "예상 효과"
         }},
         {{
             "category": "H1 태그",
-            "priority": "높음/중간/낮음",
-            "current_html": "<h1>현재 제목</h1>",
-            "recommended_html": "<h1>개선된 제목</h1>",
+            "priority": "높음",
+            "current_html": "<h1>{current_h1[0] if current_h1 else ''}</h1>",
+            "recommended_html": "<h1>완성된 H1 제목 - 페이지의 핵심 주제를 명확히 전달</h1>",
             "reason": "변경 이유",
             "expected_effect": "예상 효과"
         }},
         {{
-            "category": "헤딩 구조",
-            "priority": "높음/중간/낮음",
-            "current_html": "현재 헤딩 구조 설명",
-            "recommended_html": "권장 헤딩 구조 예시 (H1 → H2 → H3)",
+            "category": "H2 섹션 구조",
+            "priority": "중간",
+            "current_html": "현재 H2 구조: {', '.join(current_h2[:3]) if current_h2 else '없음'}",
+            "recommended_html": "<h2>추천 섹션 1: 제품/서비스 소개</h2>\\n<h2>추천 섹션 2: 주요 특징 및 장점</h2>\\n<h2>추천 섹션 3: 사용 방법/활용 팁</h2>\\n<h2>추천 섹션 4: 자주 묻는 질문 (FAQ)</h2>\\n<h2>추천 섹션 5: 관련 제품/서비스</h2>",
             "reason": "변경 이유",
             "expected_effect": "예상 효과"
         }},
         {{
-            "category": "Schema Markup",
-            "priority": "중간/낮음",
-            "current_html": "현재 상태 (없음 또는 있음)",
-            "recommended_html": "<script type=\\"application/ld+json\\">추천 스키마 예시</script>",
-            "reason": "변경 이유",
-            "expected_effect": "예상 효과"
+            "category": "Open Graph 태그",
+            "priority": "중간",
+            "current_html": "(현재 OG 태그 상태)",
+            "recommended_html": "<meta property=\\"og:title\\" content=\\"완성된 OG 타이틀\\">\\n<meta property=\\"og:description\\" content=\\"완성된 OG 설명 - 소셜 공유 시 표시될 매력적인 설명\\">\\n<meta property=\\"og:type\\" content=\\"product 또는 article\\">",
+            "reason": "소셜 미디어 공유 최적화",
+            "expected_effect": "소셜 공유 시 클릭률 향상"
+        }},
+        {{
+            "category": "Schema Markup (구조화 데이터)",
+            "priority": "중간",
+            "current_html": "(현재 없음 또는 있음)",
+            "recommended_html": "<script type=\\"application/ld+json\\">\\n{{\\n  \\"@context\\": \\"https://schema.org\\",\\n  \\"@type\\": \\"Product\\" 또는 \\"Article\\",\\n  \\"name\\": \\"제품/페이지명\\",\\n  \\"description\\": \\"설명\\",\\n  \\"brand\\": \\"브랜드명\\"\\n}}\\n</script>",
+            "reason": "구조화 데이터 추가 이유",
+            "expected_effect": "리치 스니펫 표시, 검색 결과 노출 개선"
         }}
     ],
     "keyword_strategy": {{
-        "primary_focus": ["집중해야 할 핵심 키워드 3-5개"],
-        "secondary_targets": ["2차 타겟 키워드 5-10개"],
-        "content_gaps": ["현재 페이지에서 다루지 않지만 추가해야 할 키워드/주제"]
+        "primary_focus": ["이 페이지에서 반드시 타겟해야 할 핵심 키워드 3-5개"],
+        "secondary_targets": ["추가로 노릴 수 있는 2차 키워드 5-10개"],
+        "content_gaps": ["현재 페이지에 없지만 추가하면 좋을 키워드/주제들"]
     }},
     "content_recommendations": [
-        "콘텐츠 개선 제안 1",
-        "콘텐츠 개선 제안 2",
-        "콘텐츠 개선 제안 3"
+        "구체적인 콘텐츠 개선 제안 1 - 어떤 내용을 어디에 추가할지",
+        "구체적인 콘텐츠 개선 제안 2",
+        "구체적인 콘텐츠 개선 제안 3"
+    ],
+    "alt_text_suggestions": [
+        {{
+            "image_description": "어떤 이미지인지 설명",
+            "recommended_alt": "완성된 alt 텍스트 - 키워드 포함"
+        }}
+    ],
+    "internal_link_suggestions": [
+        "추가하면 좋을 내부 링크 앵커 텍스트와 연결 페이지 제안"
+    ],
+    "faq_content": [
+        {{
+            "question": "사용자들이 많이 검색하는 질문 (키워드 기반)",
+            "answer": "완성된 답변 - 바로 페이지에 추가할 수 있는 형태"
+        }},
+        {{
+            "question": "두 번째 FAQ 질문",
+            "answer": "완성된 답변"
+        }},
+        {{
+            "question": "세 번째 FAQ 질문",
+            "answer": "완성된 답변"
+        }}
     ],
     "competitive_strategy": {{
-        "differentiation": "경쟁사 대비 차별화 전략",
-        "keywords_to_target": ["경쟁 키워드 타겟팅 제안"]
+        "differentiation": "경쟁사 대비 이 페이지만의 차별화 포인트와 강조 방법",
+        "keywords_to_target": ["경쟁사를 이기기 위해 타겟해야 할 키워드"]
     }},
     "quick_wins": [
-        "즉시 적용 가능한 빠른 개선 사항 1",
-        "즉시 적용 가능한 빠른 개선 사항 2",
-        "즉시 적용 가능한 빠른 개선 사항 3"
+        "지금 바로 5분 안에 적용 가능한 개선사항 1",
+        "지금 바로 적용 가능한 개선사항 2",
+        "지금 바로 적용 가능한 개선사항 3"
     ],
-    "overall_summary": "전체 개선 전략 요약 (2-3문장)"
+    "overall_summary": "전체 SEO 개선 전략을 2-3문장으로 요약. 가장 중요한 것부터 우선순위 설명."
 }}"""
 
         try:
@@ -403,21 +447,33 @@ class SEOAnalyzer:
                 messages=[
                     {
                         "role": "system",
-                        "content": """당신은 SEO 전문가이자 웹 개발 컨설턴트입니다.
-웹페이지의 SEO 요소들을 분석하고 구체적인 HTML 코드 예시와 함께 개선 방안을 제안합니다.
+                        "content": """당신은 10년 경력의 SEO 전문가이자 카피라이터입니다.
 
-제안 시 다음을 고려하세요:
-1. 실제로 적용 가능한 HTML 코드 제공
-2. 검색 엔진 최적화 모범 사례
-3. 사용자 클릭률(CTR) 향상
-4. 경쟁사 대비 차별화
-5. 키워드 자연스러운 배치
+당신의 역할은 사용자가 **복사해서 바로 붙여넣기만 하면 되는** 완성된 SEO 콘텐츠를 제공하는 것입니다.
 
-모든 제안은 한국어로 작성하되, HTML 코드는 정확한 문법으로 작성해주세요.""",
+🚫 하지 마세요:
+- "~하는 것이 좋습니다" 같은 조언
+- "핵심 키워드를 포함하세요" 같은 지시
+- "[여기에 입력]" 같은 플레이스홀더
+- 추상적인 제안
+
+✅ 해야 할 것:
+- 실제로 사용할 수 있는 완성된 Title 태그 내용
+- 바로 복사할 수 있는 Meta Description 전문
+- 완성된 H1, H2 제목들
+- 실제 FAQ 질문과 답변
+- 구체적인 alt 텍스트
+
+예시:
+❌ 나쁜 예: "<title>핵심 키워드를 앞에 배치한 타이틀을 작성하세요</title>"
+✅ 좋은 예: "<title>LED 무드등 추천 TOP 10 - 감성 인테리어 조명 | 무료배송</title>"
+
+모든 콘텐츠는 한국어로 작성하고, HTML 문법은 정확하게 작성해주세요.
+타이틀은 50-60자, 메타 설명은 150-160자를 지켜주세요.""",
                     },
                     {"role": "user", "content": prompt},
                 ],
-                temperature=0.4,
+                temperature=0.5,
                 response_format={"type": "json_object"},
             )
 
