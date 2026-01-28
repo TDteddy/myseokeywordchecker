@@ -3,13 +3,16 @@
 SEO 키워드 예측기 - Flask 웹 서버
 """
 
+import os
 from flask import Flask, render_template, request, jsonify
 from scraper import WebScraper
 from analyzer import SEOAnalyzer
 from trends import TrendsAnalyzer
 from urllib.parse import urlparse
 
-app = Flask(__name__)
+# 현재 파일 기준으로 템플릿 경로 설정
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+app = Flask(__name__, template_folder=os.path.join(BASE_DIR, 'templates'))
 
 
 def validate_url(url: str) -> str:
