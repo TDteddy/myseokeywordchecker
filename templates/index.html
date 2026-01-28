@@ -1079,6 +1079,70 @@
             color: #00d9ff;
         }
 
+        /* 키워드 태그 내 트렌드 배지 */
+        .trend-badge {
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 2px 6px;
+            border-radius: 10px;
+            margin-left: 5px;
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .trend-badge.trend-up {
+            background: rgba(0, 255, 136, 0.3);
+            color: #00ff88;
+        }
+
+        .trend-badge.trend-down {
+            background: rgba(255, 82, 82, 0.3);
+            color: #ff5252;
+        }
+
+        /* 트렌드 기반 키워드 선택 섹션 */
+        .trends-consideration-section {
+            background: linear-gradient(135deg, rgba(0, 217, 255, 0.1), rgba(0, 255, 136, 0.1));
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(0, 217, 255, 0.2);
+        }
+
+        .trends-consideration-section h4 {
+            color: #00d9ff;
+            font-size: 1rem;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .trends-consideration-section h4::before {
+            content: '📈';
+        }
+
+        .trends-impact-summary {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            color: #ccd6f6;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        .keyword-source-item.trend-high {
+            border-left: 3px solid #00ff88;
+        }
+
+        .keyword-source-item.trend-rising {
+            border-left: 3px solid #00d9ff;
+        }
+
+        .keyword-source-item.trend-excluded {
+            border-left: 3px solid #ff5252;
+        }
+
         .error-message {
             background: rgba(255, 82, 82, 0.1);
             border: 1px solid rgba(255, 82, 82, 0.3);
@@ -1433,6 +1497,26 @@
                         </div>
                     </div>
 
+                    <!-- 트렌드 기반 키워드 선택 -->
+                    <div class="trends-consideration-section" id="trendsConsiderationSection" style="display: none;">
+                        <h4>Google Trends 기반 키워드 선택</h4>
+                        <div class="trends-impact-summary" id="trendsImpactSummary"></div>
+                        <div class="keyword-sources">
+                            <div class="keyword-source-item trend-high">
+                                <h4>높은 검색량 (우선 선택)</h4>
+                                <div class="keyword-tags" id="highScoreKeywords"></div>
+                            </div>
+                            <div class="keyword-source-item trend-rising">
+                                <h4>상승 트렌드 (적극 활용)</h4>
+                                <div class="keyword-tags" id="risingTrendKeywords"></div>
+                            </div>
+                            <div class="keyword-source-item trend-excluded">
+                                <h4>트렌드 기반 제외</h4>
+                                <div class="keyword-tags" id="excludedByTrends"></div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="keyword-sources">
                         <div class="keyword-source-item">
                             <h4>원본 분석에서 채택</h4>
@@ -1688,6 +1772,9 @@
                             displayTrendsResults(trendsData);
                             document.getElementById('trendsSection').style.display = 'block';
 
+                            // 키워드 확장 결과에 트렌드 점수 업데이트
+                            updateKeywordTagsWithTrends(trendsData);
+
                             // 1위 키워드에 대한 관련 검색어 조회
                             if (trendsData.keywords && trendsData.keywords.length > 0) {
                                 const topKeyword = trendsData.keywords[0].keyword;
@@ -1877,6 +1964,21 @@
                 keywordSelection.selected_main_keyword || '-';
             document.getElementById('selectionReason').textContent =
                 keywordSelection.selection_reason || '-';
+
+            // 트렌드 기반 키워드 선택 표시
+            const trendsConsideration = keywordSelection.trends_consideration || {};
+            const trendsSection = document.getElementById('trendsConsiderationSection');
+            if (trendsConsideration.trends_impact_summary ||
+                (trendsConsideration.high_score_keywords && trendsConsideration.high_score_keywords.length > 0)) {
+                trendsSection.style.display = 'block';
+                document.getElementById('trendsImpactSummary').textContent =
+                    trendsConsideration.trends_impact_summary || '';
+                displayKeywords('highScoreKeywords', trendsConsideration.high_score_keywords || [], 'main');
+                displayKeywords('risingTrendKeywords', trendsConsideration.rising_trend_keywords || [], 'secondary');
+                displayKeywords('excludedByTrends', trendsConsideration.excluded_by_trends || [], 'buyer');
+            } else {
+                trendsSection.style.display = 'none';
+            }
 
             displayKeywords('fromOriginalKeywords', keywordSelection.from_original_keywords || [], 'main');
             displayKeywords('fromExpandedKeywords', keywordSelection.from_expanded_keywords || [], 'secondary');
@@ -2113,6 +2215,48 @@
                     topContainer.appendChild(tag);
                 });
             }
+        }
+
+        function updateKeywordTagsWithTrends(trendsData) {
+            // 트렌드 데이터를 키워드별 맵으로 변환
+            const trendsMap = {};
+            (trendsData.keywords || []).forEach(kw => {
+                trendsMap[kw.keyword] = {
+                    score: kw.score || 0,
+                    trend: kw.trend || ''
+                };
+            });
+
+            // 모든 키워드 태그 컨테이너들
+            const containerIds = [
+                'mainKeywords', 'secondaryKeywords', 'longtailKeywords',
+                'relatedKeywords', 'semanticKeywords', 'questionKeywords',
+                'buyerKeywords', 'comparisonKeywords'
+            ];
+
+            containerIds.forEach(containerId => {
+                const container = document.getElementById(containerId);
+                if (!container) return;
+
+                const tags = container.querySelectorAll('.keyword-tag');
+                tags.forEach(tag => {
+                    const keyword = tag.textContent.split(' (')[0]; // 기존 점수 제거
+                    if (trendsMap[keyword]) {
+                        const data = trendsMap[keyword];
+                        // 트렌드 배지 추가
+                        const trendIcon = data.trend === '상승' ? '↑' :
+                                         data.trend === '하락' ? '↓' :
+                                         data.trend === '유지' ? '→' : '';
+                        const trendClass = data.trend === '상승' ? 'trend-up' :
+                                          data.trend === '하락' ? 'trend-down' : '';
+
+                        // 점수와 트렌드 표시
+                        if (data.score > 0) {
+                            tag.innerHTML = `${escapeHtml(keyword)} <span class="trend-badge ${trendClass}">${data.score}${trendIcon}</span>`;
+                        }
+                    }
+                });
+            });
         }
 
         function escapeHtml(text) {

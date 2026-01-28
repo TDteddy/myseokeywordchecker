@@ -417,6 +417,12 @@ class SEOAnalyzer:
     "keyword_selection_analysis": {{
         "selected_main_keyword": "최종 선택한 메인 키워드 1개",
         "selection_reason": "이 메인 키워드를 선택한 이유 (검색의도, 페이지 내용 적합성, 경쟁 키워드 분석 결과 등)",
+        "trends_consideration": {{
+            "high_score_keywords": ["트렌드 점수가 높아 우선 선택한 키워드들"],
+            "rising_trend_keywords": ["상승 트렌드여서 활용한 키워드들"],
+            "excluded_by_trends": ["트렌드 점수가 낮거나 하락세여서 제외한 키워드들"],
+            "trends_impact_summary": "Google Trends 데이터가 키워드 선택에 미친 영향 설명"
+        }},
         "from_original_keywords": ["원본 분석에서 채택한 키워드들"],
         "from_expanded_keywords": ["키워드 확장에서 채택한 키워드들"],
         "from_buyer_intent": ["구매 의도 키워드에서 채택한 것들"],
@@ -424,10 +430,10 @@ class SEOAnalyzer:
         "rejected_keywords": [
             {{
                 "keyword": "채택하지 않은 키워드",
-                "reason": "제외 이유 (너무 경쟁 치열, 검색의도 불일치, 글자수 제한 등)"
+                "reason": "제외 이유 (너무 경쟁 치열, 검색의도 불일치, 글자수 제한, 트렌드 점수 낮음 등)"
             }}
         ],
-        "keyword_placement_strategy": "키워드 배치 전략 설명 (어디에 어떤 키워드를 왜 배치했는지)"
+        "keyword_placement_strategy": "키워드 배치 전략 설명 (어디에 어떤 키워드를 왜 배치했는지, 트렌드 점수 기반 배치 포함)"
     }},
     "keyword_strategy": {{
         "primary_focus": ["이 페이지에서 반드시 타겟해야 할 핵심 키워드 3-5개"],
