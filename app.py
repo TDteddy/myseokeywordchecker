@@ -4,14 +4,21 @@ SEO 키워드 예측기 - Flask 웹 서버
 """
 
 import os
+import sys
 from flask import Flask, render_template, request, jsonify
 from scraper import WebScraper
 from analyzer import SEOAnalyzer
 from trends import TrendsAnalyzer
 from urllib.parse import urlparse
 
-# 현재 파일 기준으로 템플릿 경로 설정
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+# PyInstaller 번들 여부 확인 후 경로 설정
+if getattr(sys, 'frozen', False):
+    # PyInstaller로 빌드된 경우
+    BASE_DIR = sys._MEIPASS
+else:
+    # 일반 Python 실행
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 app = Flask(__name__, template_folder=os.path.join(BASE_DIR, 'templates'))
 
 
