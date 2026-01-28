@@ -284,9 +284,13 @@ class SEOAnalyzer:
         analysis_result: dict,
         keyword_expansion: dict,
         similar_products: dict,
+        trends_data: dict = None,
         model: str = "gpt-4o",
     ) -> dict:
         """모든 분석 결과를 종합하여 바로 사용 가능한 개선 제안을 생성합니다."""
+
+        if trends_data is None:
+            trends_data = {}
 
         # 현재 HTML 태그들 정리
         current_title = seo_data.get("title", "")
@@ -308,6 +312,14 @@ class SEOAnalyzer:
         competitor_brands = similar_products.get("competitor_brands", [])[:5]
         alternative_searches = similar_products.get("alternative_searches", [])[:5]
         similar_products_list = similar_products.get("similar_products", [])[:3]
+
+        # Google Trends 정보 정리
+        trends_keywords = trends_data.get("keywords", [])
+        trends_info = ""
+        if trends_keywords:
+            trends_info = "\n## Google Trends 인기도 (점수 높을수록 검색량 많음)\n"
+            for kw in trends_keywords[:10]:
+                trends_info += f"- {kw.get('keyword', '')}: {kw.get('score', 0)}점 (트렌드: {kw.get('trend', 'N/A')})\n"
 
         prompt = f"""당신은 SEO 전문가입니다. 아래 정보를 분석하고, 사용자가 **복사해서 바로 붙여넣기만 하면 되는** 완성된 SEO 콘텐츠를 작성해주세요.
 
@@ -340,7 +352,7 @@ class SEOAnalyzer:
 - 경쟁 브랜드: {', '.join(competitor_brands)}
 - 대체 검색어: {', '.join(alternative_searches)}
 - 유사 제품: {', '.join([p.get('name', '') for p in similar_products_list]) if similar_products_list else '(없음)'}
-
+{trends_info}
 ---
 
 다음 JSON 형식으로 **바로 사용 가능한 완성된 콘텐츠**를 제공해주세요:
@@ -512,6 +524,15 @@ Meta Description에 활용:
 • 구매 의도(Transactional): "~구매", "~가격", "~추천"
 • 비교 검색(Commercial): "~vs~", "~비교", "~순위"
 • 탐색(Navigational): 브랜드명 + 제품
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📈 Google Trends 데이터 활용
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Google Trends 데이터가 제공되면, 실제 검색 인기도를 기반으로 키워드 선택
+• 점수가 높은 키워드를 우선적으로 Title과 H1에 배치
+• 상승 트렌드인 키워드는 적극 활용
+• 하락 트렌드인 키워드는 보조 키워드로 활용하거나 제외 고려
+• keyword_selection_analysis에서 트렌드 데이터를 근거로 명시
 
 🚫 하지 마세요:
 - "~하는 것이 좋습니다" 같은 조언

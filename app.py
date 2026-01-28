@@ -6,6 +6,7 @@ SEO 키워드 예측기 - Flask 웹 서버
 from flask import Flask, render_template, request, jsonify
 from scraper import WebScraper
 from analyzer import SEOAnalyzer
+from trends import TrendsAnalyzer
 from urllib.parse import urlparse
 
 app = Flask(__name__)
@@ -142,6 +143,63 @@ def similar_products():
         return jsonify({"success": False, "error": f"오류 발생: {str(e)}"})
 
 
+@app.route("/keyword-trends", methods=["POST"])
+def keyword_trends():
+    """키워드 Google Trends 분석 API"""
+    data = request.get_json()
+    keywords = data.get("keywords", [])
+    timeframe = data.get("timeframe", "today 3-m")
+
+    if not keywords:
+        return jsonify({"success": False, "error": "키워드를 입력해주세요."})
+
+    try:
+        trends_analyzer = TrendsAnalyzer()
+
+        # 키워드가 5개 이하면 일반 비교, 초과면 배치 비교
+        if len(keywords) <= 5:
+            result = trends_analyzer.get_keyword_interest(keywords, timeframe)
+            if "error" in result:
+                return jsonify({"success": False, "error": result["error"]})
+            return jsonify({"success": True, "trends": result})
+        else:
+            # 배치로 비교
+            keywords_data = trends_analyzer.compare_keywords_batch(keywords, timeframe=timeframe)
+            return jsonify({
+                "success": True,
+                "trends": {
+                    "keywords": keywords_data,
+                    "timeframe": timeframe,
+                    "geo": "KR",
+                }
+            })
+
+    except Exception as e:
+        return jsonify({"success": False, "error": f"Google Trends 오류: {str(e)}"})
+
+
+@app.route("/related-queries", methods=["POST"])
+def related_queries():
+    """관련 검색어 조회 API"""
+    data = request.get_json()
+    keyword = data.get("keyword", "").strip()
+
+    if not keyword:
+        return jsonify({"success": False, "error": "키워드를 입력해주세요."})
+
+    try:
+        trends_analyzer = TrendsAnalyzer()
+        result = trends_analyzer.get_related_queries(keyword)
+
+        if "error" in result:
+            return jsonify({"success": False, "error": result["error"]})
+
+        return jsonify({"success": True, "related": result})
+
+    except Exception as e:
+        return jsonify({"success": False, "error": f"관련 검색어 조회 오류: {str(e)}"})
+
+
 @app.route("/comprehensive-recommendations", methods=["POST"])
 def comprehensive_recommendations():
     """종합 개선제안 API"""
@@ -150,6 +208,7 @@ def comprehensive_recommendations():
     analysis_result = data.get("analysis_result", {})
     keyword_expansion = data.get("keyword_expansion", {})
     similar_products = data.get("similar_products", {})
+    trends_data = data.get("trends_data", {})
     model = data.get("model", "gpt-4o")
 
     if not seo_data or not analysis_result:
@@ -162,6 +221,7 @@ def comprehensive_recommendations():
             analysis_result=analysis_result,
             keyword_expansion=keyword_expansion,
             similar_products=similar_products,
+            trends_data=trends_data,
             model=model,
         )
 
