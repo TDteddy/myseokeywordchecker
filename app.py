@@ -9,6 +9,7 @@ from flask import Flask, render_template, request, jsonify
 from scraper import WebScraper
 from analyzer import SEOAnalyzer
 from trends import TrendsAnalyzer
+from company_keywords import CompanyKeywordAPI
 from urllib.parse import urlparse
 
 # PyInstaller 번들 여부 확인 후 경로 설정
@@ -210,6 +211,71 @@ def related_queries():
         return jsonify({"success": False, "error": f"관련 검색어 조회 오류: {str(e)}"})
 
 
+@app.route("/company-keywords", methods=["POST"])
+def company_keywords():
+    """회사 키워드 성과 데이터 조회 API"""
+    data = request.get_json()
+    brand = data.get("brand")
+    product_line = data.get("product_line")
+    product_group = data.get("product_group")
+    product_name = data.get("product_name")
+    start_date = data.get("start_date")
+    end_date = data.get("end_date")
+    limit = data.get("limit", 30)
+
+    try:
+        api = CompanyKeywordAPI()
+        result = api.get_keyword_data(
+            brand=brand,
+            product_line=product_line,
+            product_group=product_group,
+            product_name=product_name,
+            start_date=start_date,
+            end_date=end_date,
+            naver_organic_only=True  # 네이버 오가닉만
+        )
+
+        if "error" in result:
+            return jsonify({"success": False, "error": result["error"]})
+
+        # 상위 N개만 반환
+        result["keywords"] = result["keywords"][:limit]
+
+        return jsonify({"success": True, "company_data": result})
+
+    except Exception as e:
+        return jsonify({"success": False, "error": f"회사 데이터 조회 오류: {str(e)}"})
+
+
+@app.route("/company-keywords/analyze", methods=["POST"])
+def analyze_company_keywords():
+    """특정 키워드들의 회사 성과 데이터 분석 API"""
+    data = request.get_json()
+    keywords = data.get("keywords", [])
+    start_date = data.get("start_date")
+    end_date = data.get("end_date")
+
+    if not keywords:
+        return jsonify({"success": False, "error": "키워드를 입력해주세요."})
+
+    try:
+        api = CompanyKeywordAPI()
+        result = api.analyze_keyword_performance(
+            target_keywords=keywords,
+            start_date=start_date,
+            end_date=end_date,
+            naver_organic_only=True
+        )
+
+        if "error" in result:
+            return jsonify({"success": False, "error": result["error"]})
+
+        return jsonify({"success": True, "performance": result})
+
+    except Exception as e:
+        return jsonify({"success": False, "error": f"키워드 성과 분석 오류: {str(e)}"})
+
+
 @app.route("/comprehensive-recommendations", methods=["POST"])
 def comprehensive_recommendations():
     """종합 개선제안 API"""
@@ -219,6 +285,7 @@ def comprehensive_recommendations():
     keyword_expansion = data.get("keyword_expansion", {})
     similar_products = data.get("similar_products", {})
     trends_data = data.get("trends_data", {})
+    company_keywords = data.get("company_keywords", {})
     model = data.get("model", "gpt-4o")
 
     if not seo_data or not analysis_result:
@@ -232,6 +299,7 @@ def comprehensive_recommendations():
             keyword_expansion=keyword_expansion,
             similar_products=similar_products,
             trends_data=trends_data,
+            company_keywords=company_keywords,
             model=model,
         )
 

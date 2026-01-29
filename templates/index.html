@@ -1143,6 +1143,158 @@
             border-left: 3px solid #ff5252;
         }
 
+        /* 회사 키워드 데이터 스타일 */
+        .company-keyword-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 10px;
+            margin-bottom: 10px;
+            gap: 15px;
+        }
+
+        .company-keyword-item.high-conversion {
+            border-left: 3px solid #00ff88;
+            background: rgba(0, 255, 136, 0.05);
+        }
+
+        .company-keyword-item.high-volume {
+            border-left: 3px solid #00d9ff;
+            background: rgba(0, 217, 255, 0.05);
+        }
+
+        .company-rank {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.9rem;
+            flex-shrink: 0;
+            background: rgba(255, 255, 255, 0.1);
+            color: #8892b0;
+        }
+
+        .company-rank.rank-1 {
+            background: linear-gradient(135deg, #ffd700, #ffaa00);
+            color: #1a1a2e;
+        }
+
+        .company-rank.rank-2 {
+            background: linear-gradient(135deg, #c0c0c0, #a0a0a0);
+            color: #1a1a2e;
+        }
+
+        .company-rank.rank-3 {
+            background: linear-gradient(135deg, #cd7f32, #b87333);
+            color: #1a1a2e;
+        }
+
+        .company-keyword-name {
+            flex: 1;
+            font-weight: 500;
+            color: #ccd6f6;
+        }
+
+        .company-stats {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .company-stat {
+            text-align: center;
+        }
+
+        .company-stat label {
+            display: block;
+            font-size: 0.75rem;
+            color: #8892b0;
+            margin-bottom: 2px;
+        }
+
+        .company-stat span {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .company-stat span.clicks {
+            color: #00d9ff;
+        }
+
+        .company-stat span.orders {
+            color: #00ff88;
+        }
+
+        .company-stat span.conversion {
+            color: #ffc107;
+        }
+
+        .conversion-badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .conversion-badge.high {
+            background: rgba(0, 255, 136, 0.2);
+            color: #00ff88;
+        }
+
+        .conversion-badge.medium {
+            background: rgba(255, 193, 7, 0.2);
+            color: #ffc107;
+        }
+
+        .conversion-badge.low {
+            background: rgba(255, 82, 82, 0.2);
+            color: #ff5252;
+        }
+
+        /* 회사 데이터 기반 키워드 선택 스타일 */
+        .company-data-section {
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.1), rgba(255, 193, 7, 0.1));
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(0, 255, 136, 0.2);
+        }
+
+        .company-data-section h4 {
+            color: #00ff88;
+            font-size: 1rem;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .company-data-section h4::before {
+            content: '🎯';
+        }
+
+        .company-impact-summary {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            color: #ccd6f6;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        .keyword-source-item.conversion-high {
+            border-left: 3px solid #00ff88;
+        }
+
+        .keyword-source-item.volume-high {
+            border-left: 3px solid #ffc107;
+        }
+
         .error-message {
             background: rgba(255, 82, 82, 0.1);
             border: 1px solid rgba(255, 82, 82, 0.3);
@@ -1269,7 +1421,12 @@
                 <div class="progress-step" id="step6">
                     <div class="spinner-small"></div>
                     <div class="check">✓</div>
-                    <span class="step-text">6. 종합 개선제안</span>
+                    <span class="step-text">6. 실구매 데이터</span>
+                </div>
+                <div class="progress-step" id="step7">
+                    <div class="spinner-small"></div>
+                    <div class="check">✓</div>
+                    <span class="step-text">7. 종합 개선제안</span>
                 </div>
             </div>
         </div>
@@ -1478,7 +1635,24 @@
                 </div>
             </div>
 
-            <!-- 5. 종합 개선 제안 -->
+            <!-- 5. 실제 구매 전환 데이터 -->
+            <div id="companySection" style="display: none;">
+                <h2 class="section-title">실제 구매 전환 데이터 (네이버 오가닉)</h2>
+
+                <div class="card">
+                    <h2>실제 구매로 이어진 키워드</h2>
+                    <p class="card-description">실제 구매 전환이 발생한 키워드입니다. 전환율이 높은 키워드를 SEO에 최우선 활용하세요.</p>
+                    <div id="companyKeywordsRanking"></div>
+                </div>
+
+                <div class="card">
+                    <h2>전환율 TOP 키워드</h2>
+                    <p class="card-description">클릭 대비 구매 전환율이 높은 키워드 (최소 5회 이상 클릭)</p>
+                    <div id="highConversionKeywords"></div>
+                </div>
+            </div>
+
+            <!-- 6. 종합 개선 제안 -->
             <div id="comprehensiveSection" style="display: none;">
                 <h2 class="section-title">종합 개선 제안</h2>
 
@@ -1494,6 +1668,22 @@
                         <div class="selection-reason-box">
                             <label>선택 이유</label>
                             <p id="selectionReason">-</p>
+                        </div>
+                    </div>
+
+                    <!-- 실제 구매 데이터 기반 키워드 선택 -->
+                    <div class="company-data-section" id="companyDataSection" style="display: none;">
+                        <h4>실제 구매 전환 데이터 기반 키워드 선택 (최우선)</h4>
+                        <div class="company-impact-summary" id="companyImpactSummary"></div>
+                        <div class="keyword-sources">
+                            <div class="keyword-source-item conversion-high">
+                                <h4>전환율 높은 키워드 (구매 직결)</h4>
+                                <div class="keyword-tags" id="highConversionKeywordsSelection"></div>
+                            </div>
+                            <div class="keyword-source-item volume-high">
+                                <h4>볼륨 높은 키워드 (클릭/구매수 多)</h4>
+                                <div class="keyword-tags" id="highVolumeKeywordsSelection"></div>
+                            </div>
                         </div>
                     </div>
 
@@ -1647,6 +1837,7 @@
             document.getElementById('expandSection').style.display = 'none';
             document.getElementById('similarSection').style.display = 'none';
             document.getElementById('trendsSection').style.display = 'none';
+            document.getElementById('companySection').style.display = 'none';
             document.getElementById('comprehensiveSection').style.display = 'none';
             document.getElementById('risingQueriesCard').style.display = 'none';
             document.getElementById('topQueriesCard').style.display = 'none';
@@ -1802,8 +1993,32 @@
                     console.error('네이버 데이터랩 오류:', err);
                 }
 
-                // Step 6: 종합 개선제안 API 호출
+                // Step 6: 회사 실구매 데이터 조회
                 setStepLoading('step6');
+                let companyKeywordsData = {};
+                try {
+                    const companyResponse = await fetch('/company-keywords', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            limit: 30
+                        }),
+                    });
+                    const companyResult = await companyResponse.json();
+
+                    setStepDone('step6');
+                    if (companyResult.success && companyResult.company_data) {
+                        companyKeywordsData = companyResult.company_data;
+                        displayCompanyResults(companyKeywordsData);
+                        document.getElementById('companySection').style.display = 'block';
+                    }
+                } catch (err) {
+                    setStepDone('step6');
+                    console.error('회사 데이터 조회 오류:', err);
+                }
+
+                // Step 7: 종합 개선제안 API 호출
+                setStepLoading('step7');
                 try {
                     const comprehensiveResponse = await fetch('/comprehensive-recommendations', {
                         method: 'POST',
@@ -1814,18 +2029,19 @@
                             keyword_expansion: keywordExpansion,
                             similar_products: similarResult,
                             trends_data: trendsData,  // 트렌드 데이터 전달
+                            company_keywords: companyKeywordsData,  // 회사 실구매 데이터 전달
                             model: model === 'gpt-4o' ? 'gpt-4o' : 'gpt-4o'  // 종합 제안은 정확도를 위해 gpt-4o 사용
                         }),
                     });
                     const comprehensiveData = await comprehensiveResponse.json();
 
-                    setStepDone('step6');
+                    setStepDone('step7');
                     if (comprehensiveData.success) {
                         displayComprehensiveResults(comprehensiveData.recommendations);
                         document.getElementById('comprehensiveSection').style.display = 'block';
                     }
                 } catch (err) {
-                    setStepDone('step6');
+                    setStepDone('step7');
                     console.error('종합 개선제안 오류:', err);
                 }
 
@@ -1837,7 +2053,7 @@
         }
 
         function resetProgress() {
-            ['step1', 'step2', 'step3', 'step4', 'step5', 'step6'].forEach(id => {
+            ['step1', 'step2', 'step3', 'step4', 'step5', 'step6', 'step7'].forEach(id => {
                 const el = document.getElementById(id);
                 el.classList.remove('loading', 'done');
             });
@@ -1964,6 +2180,20 @@
                 keywordSelection.selected_main_keyword || '-';
             document.getElementById('selectionReason').textContent =
                 keywordSelection.selection_reason || '-';
+
+            // 실제 구매 데이터 기반 키워드 선택 표시
+            const companyDataConsideration = keywordSelection.company_data_consideration || {};
+            const companySection = document.getElementById('companyDataSection');
+            if (companyDataConsideration.conversion_data_impact ||
+                (companyDataConsideration.high_conversion_keywords && companyDataConsideration.high_conversion_keywords.length > 0)) {
+                companySection.style.display = 'block';
+                document.getElementById('companyImpactSummary').textContent =
+                    companyDataConsideration.conversion_data_impact || '';
+                displayKeywords('highConversionKeywordsSelection', companyDataConsideration.high_conversion_keywords || [], 'main');
+                displayKeywords('highVolumeKeywordsSelection', companyDataConsideration.high_volume_keywords || [], 'secondary');
+            } else {
+                companySection.style.display = 'none';
+            }
 
             // 트렌드 기반 키워드 선택 표시
             const trendsConsideration = keywordSelection.trends_consideration || {};
@@ -2215,6 +2445,95 @@
                     topContainer.appendChild(tag);
                 });
             }
+        }
+
+        function displayCompanyResults(data) {
+            const keywords = data.keywords || [];
+
+            // 구매순 키워드 순위 표시
+            const rankingContainer = document.getElementById('companyKeywordsRanking');
+            rankingContainer.innerHTML = '';
+
+            if (keywords.length === 0) {
+                rankingContainer.innerHTML = '<p style="color: #8892b0;">구매 데이터가 없습니다.</p>';
+                return;
+            }
+
+            // 구매순 상위 15개 표시
+            keywords.slice(0, 15).forEach((kw, index) => {
+                const rank = index + 1;
+                const isHighVolume = kw.orders >= 3 || kw.clicks >= 20;
+
+                let rankClass = 'rank-other';
+                if (rank === 1) rankClass = 'rank-1';
+                else if (rank === 2) rankClass = 'rank-2';
+                else if (rank === 3) rankClass = 'rank-3';
+
+                let conversionClass = 'low';
+                if (kw.conversion_rate >= 10) conversionClass = 'high';
+                else if (kw.conversion_rate >= 5) conversionClass = 'medium';
+
+                const div = document.createElement('div');
+                div.className = `company-keyword-item ${isHighVolume ? 'high-volume' : ''}`;
+                div.innerHTML = `
+                    <div class="company-rank ${rankClass}">${rank}</div>
+                    <div class="company-keyword-name">${escapeHtml(kw.keyword)}</div>
+                    <div class="company-stats">
+                        <div class="company-stat">
+                            <label>클릭</label>
+                            <span class="clicks">${kw.clicks}</span>
+                        </div>
+                        <div class="company-stat">
+                            <label>구매</label>
+                            <span class="orders">${kw.orders}</span>
+                        </div>
+                        <span class="conversion-badge ${conversionClass}">${kw.conversion_rate}%</span>
+                    </div>
+                `;
+                rankingContainer.appendChild(div);
+            });
+
+            // 전환율 높은 키워드 (최소 5회 이상 클릭)
+            const highConversionContainer = document.getElementById('highConversionKeywords');
+            highConversionContainer.innerHTML = '';
+
+            const highConversionKeywords = keywords
+                .filter(kw => kw.clicks >= 5)
+                .sort((a, b) => b.conversion_rate - a.conversion_rate)
+                .slice(0, 10);
+
+            if (highConversionKeywords.length === 0) {
+                highConversionContainer.innerHTML = '<p style="color: #8892b0;">충분한 클릭 데이터가 있는 키워드가 없습니다.</p>';
+                return;
+            }
+
+            highConversionKeywords.forEach((kw, index) => {
+                const rank = index + 1;
+
+                let rankClass = 'rank-other';
+                if (rank === 1) rankClass = 'rank-1';
+                else if (rank === 2) rankClass = 'rank-2';
+                else if (rank === 3) rankClass = 'rank-3';
+
+                const div = document.createElement('div');
+                div.className = 'company-keyword-item high-conversion';
+                div.innerHTML = `
+                    <div class="company-rank ${rankClass}">${rank}</div>
+                    <div class="company-keyword-name">${escapeHtml(kw.keyword)}</div>
+                    <div class="company-stats">
+                        <div class="company-stat">
+                            <label>클릭</label>
+                            <span class="clicks">${kw.clicks}</span>
+                        </div>
+                        <div class="company-stat">
+                            <label>구매</label>
+                            <span class="orders">${kw.orders}</span>
+                        </div>
+                        <span class="conversion-badge high">${kw.conversion_rate}%</span>
+                    </div>
+                `;
+                highConversionContainer.appendChild(div);
+            });
         }
 
         function updateKeywordTagsWithTrends(trendsData) {

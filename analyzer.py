@@ -315,12 +315,15 @@ class SEOAnalyzer:
         keyword_expansion: dict,
         similar_products: dict,
         trends_data: dict = None,
+        company_keywords: dict = None,
         model: str = "gpt-4o",
     ) -> dict:
         """모든 분석 결과를 종합하여 바로 사용 가능한 개선 제안을 생성합니다."""
 
         if trends_data is None:
             trends_data = {}
+        if company_keywords is None:
+            company_keywords = {}
 
         # 현재 HTML 태그들 정리
         current_title = seo_data.get("title", "")
@@ -350,6 +353,15 @@ class SEOAnalyzer:
             trends_info = "\n## 네이버 데이터랩 인기도 (점수 높을수록 검색량 많음)\n"
             for kw in trends_keywords[:10]:
                 trends_info += f"- {kw.get('keyword', '')}: {kw.get('score', 0)}점 (트렌드: {kw.get('trend', 'N/A')})\n"
+
+        # 회사 실제 구매/유입 키워드 데이터 정리 (네이버 오가닉)
+        company_keywords_list = company_keywords.get("keywords", [])
+        company_info = ""
+        if company_keywords_list:
+            company_info = "\n## 🎯 실제 구매 전환 데이터 (네이버 오가닉 - 가장 중요!)\n"
+            company_info += "※ 이 데이터는 실제 구매로 이어진 키워드입니다. SEO 최적화 시 최우선 고려하세요.\n"
+            for kw in company_keywords_list[:15]:
+                company_info += f"- {kw.get('keyword', '')}: 클릭 {kw.get('clicks', 0)}회, 구매 {kw.get('orders', 0)}건, 전환율 {kw.get('conversion_rate', 0)}%\n"
 
         prompt = f"""당신은 SEO 전문가입니다. 아래 정보를 분석하고, 사용자가 **복사해서 바로 붙여넣기만 하면 되는** 완성된 SEO 콘텐츠를 작성해주세요.
 
@@ -382,7 +394,7 @@ class SEOAnalyzer:
 - 경쟁 브랜드: {', '.join(competitor_brands)}
 - 대체 검색어: {', '.join(alternative_searches)}
 - 유사 제품: {', '.join([p.get('name', '') for p in similar_products_list]) if similar_products_list else '(없음)'}
-{trends_info}
+{trends_info}{company_info}
 ---
 
 다음 JSON 형식으로 **바로 사용 가능한 완성된 콘텐츠**를 제공해주세요:
@@ -447,6 +459,11 @@ class SEOAnalyzer:
     "keyword_selection_analysis": {{
         "selected_main_keyword": "최종 선택한 메인 키워드 1개",
         "selection_reason": "이 메인 키워드를 선택한 이유 (검색의도, 페이지 내용 적합성, 경쟁 키워드 분석 결과 등)",
+        "company_data_consideration": {{
+            "high_conversion_keywords": ["실제 구매 전환율이 높아 우선 선택한 키워드들"],
+            "high_volume_keywords": ["클릭/구매수가 많아 활용한 키워드들"],
+            "conversion_data_impact": "실제 구매 데이터가 키워드 선택에 미친 영향 설명"
+        }},
         "trends_consideration": {{
             "high_score_keywords": ["트렌드 점수가 높아 우선 선택한 키워드들"],
             "rising_trend_keywords": ["상승 트렌드여서 활용한 키워드들"],
@@ -560,6 +577,15 @@ Meta Description에 활용:
 • 구매 의도(Transactional): "~구매", "~가격", "~추천"
 • 비교 검색(Commercial): "~vs~", "~비교", "~순위"
 • 탐색(Navigational): 브랜드명 + 제품
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎯 실제 구매 전환 데이터 활용 (최우선!)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• 회사의 실제 구매/유입 데이터가 제공되면, 이것이 가장 신뢰할 수 있는 근거입니다
+• 전환율이 높은 키워드 = 구매 의도가 높은 검색어 → Title, H1에 최우선 배치
+• 클릭수가 많은 키워드 = 검색량이 많은 키워드 → 노출 확대에 활용
+• 실제 구매로 이어진 키워드는 반드시 SEO 전략에 반영
+• company_data_consideration에서 구매 데이터를 근거로 명시
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 📈 네이버 데이터랩 데이터 활용
