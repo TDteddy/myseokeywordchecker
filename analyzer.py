@@ -343,11 +343,11 @@ class SEOAnalyzer:
         alternative_searches = similar_products.get("alternative_searches", [])[:5]
         similar_products_list = similar_products.get("similar_products", [])[:3]
 
-        # Google Trends 정보 정리
+        # 네이버 데이터랩 정보 정리
         trends_keywords = trends_data.get("keywords", [])
         trends_info = ""
         if trends_keywords:
-            trends_info = "\n## Google Trends 인기도 (점수 높을수록 검색량 많음)\n"
+            trends_info = "\n## 네이버 데이터랩 인기도 (점수 높을수록 검색량 많음)\n"
             for kw in trends_keywords[:10]:
                 trends_info += f"- {kw.get('keyword', '')}: {kw.get('score', 0)}점 (트렌드: {kw.get('trend', 'N/A')})\n"
 
@@ -451,7 +451,7 @@ class SEOAnalyzer:
             "high_score_keywords": ["트렌드 점수가 높아 우선 선택한 키워드들"],
             "rising_trend_keywords": ["상승 트렌드여서 활용한 키워드들"],
             "excluded_by_trends": ["트렌드 점수가 낮거나 하락세여서 제외한 키워드들"],
-            "trends_impact_summary": "Google Trends 데이터가 키워드 선택에 미친 영향 설명"
+            "trends_impact_summary": "네이버 데이터랩 데이터가 키워드 선택에 미친 영향 설명"
         }},
         "from_original_keywords": ["원본 분석에서 채택한 키워드들"],
         "from_expanded_keywords": ["키워드 확장에서 채택한 키워드들"],
@@ -562,9 +562,9 @@ Meta Description에 활용:
 • 탐색(Navigational): 브랜드명 + 제품
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📈 Google Trends 데이터 활용
+📈 네이버 데이터랩 데이터 활용
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• Google Trends 데이터가 제공되면, 실제 검색 인기도를 기반으로 키워드 선택
+• 네이버 데이터랩 데이터가 제공되면, 실제 검색 인기도를 기반으로 키워드 선택
 • 점수가 높은 키워드를 우선적으로 Title과 H1에 배치
 • 상승 트렌드인 키워드는 적극 활용
 • 하락 트렌드인 키워드는 보조 키워드로 활용하거나 제외 고려

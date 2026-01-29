@@ -1264,7 +1264,7 @@
                 <div class="progress-step" id="step5">
                     <div class="spinner-small"></div>
                     <div class="check">✓</div>
-                    <span class="step-text">5. Google Trends</span>
+                    <span class="step-text">5. 네이버 데이터랩</span>
                 </div>
                 <div class="progress-step" id="step6">
                     <div class="spinner-small"></div>
@@ -1457,13 +1457,13 @@
                 </div>
             </div>
 
-            <!-- 4. Google Trends 분석 -->
+            <!-- 4. 네이버 데이터랩 분석 -->
             <div id="trendsSection" style="display: none;">
-                <h2 class="section-title">Google Trends 분석</h2>
+                <h2 class="section-title">네이버 데이터랩 분석</h2>
 
                 <div class="card">
                     <h2>키워드 인기도 순위</h2>
-                    <p class="card-description">Google Trends 기준 최근 3개월간 검색 인기도입니다. 점수가 높을수록 검색량이 많습니다.</p>
+                    <p class="card-description">네이버 데이터랩 기준 최근 3개월간 검색 인기도입니다. 점수가 높을수록 검색량이 많습니다.</p>
                     <div id="trendsRanking"></div>
                 </div>
 
@@ -1499,7 +1499,7 @@
 
                     <!-- 트렌드 기반 키워드 선택 -->
                     <div class="trends-consideration-section" id="trendsConsiderationSection" style="display: none;">
-                        <h4>Google Trends 기반 키워드 선택</h4>
+                        <h4>네이버 데이터랩 기반 키워드 선택</h4>
                         <div class="trends-impact-summary" id="trendsImpactSummary"></div>
                         <div class="keyword-sources">
                             <div class="keyword-source-item trend-high">
@@ -1744,7 +1744,7 @@
                     similarResult = similarResultSettled.value.similar;
                 }
 
-                // Step 5: Google Trends 분석
+                // Step 5: 네이버 데이터랩 분석
                 setStepLoading('step5');
                 let trendsData = {};
                 try {
@@ -1799,7 +1799,7 @@
                     }
                 } catch (err) {
                     setStepDone('step5');
-                    console.error('Google Trends 오류:', err);
+                    console.error('네이버 데이터랩 오류:', err);
                 }
 
                 // Step 6: 종합 개선제안 API 호출

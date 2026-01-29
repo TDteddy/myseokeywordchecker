@@ -1,34 +1,62 @@
 """
-Google Trends API를 활용한 키워드 인기도 분석 모듈
-pytrends 라이브러리를 사용하여 키워드 간 상대적 인기도를 비교합니다.
+네이버 데이터랩 검색어 트렌드 API를 활용한 키워드 인기도 분석 모듈
+네이버 통합검색에서의 검색 추이 데이터를 조회합니다.
 """
 
+import os
 import time
+import requests
+from datetime import datetime, timedelta
 from typing import List, Dict, Optional
-from pytrends.request import TrendReq
+from dotenv import load_dotenv
 
 
 class TrendsAnalyzer:
-    """Google Trends 데이터를 분석하는 클래스"""
+    """네이버 데이터랩 검색어 트렌드를 분석하는 클래스"""
 
-    def __init__(self, hl: str = "ko", tz: int = 540):
+    API_URL = "https://openapi.naver.com/v1/datalab/search"
+
+    def __init__(self, client_id: Optional[str] = None, client_secret: Optional[str] = None):
         """
         Args:
-            hl: 언어 설정 (기본: 한국어)
-            tz: 타임존 오프셋 (기본: 540 = 한국 KST)
+            client_id: 네이버 API 클라이언트 ID
+            client_secret: 네이버 API 클라이언트 시크릿
         """
-        self.hl = hl
-        self.tz = tz
-        self.pytrends = None
-        self._init_pytrends()
+        load_dotenv()
+        self.client_id = client_id or os.getenv("NAVER_CLIENT_ID")
+        self.client_secret = client_secret or os.getenv("NAVER_CLIENT_SECRET")
 
-    def _init_pytrends(self):
-        """pytrends 인스턴스 초기화"""
-        try:
-            self.pytrends = TrendReq(hl=self.hl, tz=self.tz, timeout=(10, 25))
-        except Exception as e:
-            print(f"pytrends 초기화 오류: {e}")
-            self.pytrends = None
+        if not self.client_id or not self.client_secret:
+            print("⚠️ 네이버 API 키가 설정되지 않았습니다. NAVER_CLIENT_ID, NAVER_CLIENT_SECRET 환경변수를 설정하세요.")
+
+    def _get_date_range(self, timeframe: str = "today 3-m") -> tuple:
+        """
+        timeframe 문자열을 시작/종료 날짜로 변환합니다.
+
+        Args:
+            timeframe: 'today 1-m', 'today 3-m', 'today 12-m' 등
+
+        Returns:
+            (start_date, end_date) 튜플 (yyyy-mm-dd 형식)
+        """
+        today = datetime.now()
+        end_date = today.strftime("%Y-%m-%d")
+
+        # timeframe 파싱
+        if "1-m" in timeframe:
+            start = today - timedelta(days=30)
+        elif "3-m" in timeframe:
+            start = today - timedelta(days=90)
+        elif "6-m" in timeframe:
+            start = today - timedelta(days=180)
+        elif "12-m" in timeframe:
+            start = today - timedelta(days=365)
+        else:
+            # 기본값: 3개월
+            start = today - timedelta(days=90)
+
+        start_date = start.strftime("%Y-%m-%d")
+        return start_date, end_date
 
     def get_keyword_interest(
         self,
@@ -42,16 +70,13 @@ class TrendsAnalyzer:
         Args:
             keywords: 비교할 키워드 목록 (최대 5개)
             timeframe: 조회 기간 (기본: 최근 3개월)
-                - 'today 1-m': 최근 1개월
-                - 'today 3-m': 최근 3개월
-                - 'today 12-m': 최근 12개월
-            geo: 지역 코드 (기본: KR = 한국)
+            geo: 지역 코드 (네이버는 한국만 지원)
 
         Returns:
             키워드별 인기도 점수 및 트렌드 정보
         """
-        if not self.pytrends:
-            return {"error": "Google Trends 연결 실패", "keywords": []}
+        if not self.client_id or not self.client_secret:
+            return {"error": "네이버 API 키가 설정되지 않았습니다.", "keywords": []}
 
         # 최대 5개 키워드만 비교 가능
         keywords = keywords[:5]
@@ -60,84 +85,126 @@ class TrendsAnalyzer:
             return {"error": "키워드가 필요합니다", "keywords": []}
 
         try:
-            # 키워드 빌드
-            self.pytrends.build_payload(
-                kw_list=keywords,
-                cat=0,
-                timeframe=timeframe,
-                geo=geo,
-                gprop="",
+            start_date, end_date = self._get_date_range(timeframe)
+
+            # 키워드 그룹 구성 (각 키워드를 개별 그룹으로)
+            keyword_groups = []
+            for kw in keywords:
+                keyword_groups.append({
+                    "groupName": kw,
+                    "keywords": [kw]
+                })
+
+            # API 요청 데이터
+            request_body = {
+                "startDate": start_date,
+                "endDate": end_date,
+                "timeUnit": "week",  # 주간 단위
+                "keywordGroups": keyword_groups
+            }
+
+            # API 호출
+            headers = {
+                "X-Naver-Client-Id": self.client_id,
+                "X-Naver-Client-Secret": self.client_secret,
+                "Content-Type": "application/json"
+            }
+
+            response = requests.post(
+                self.API_URL,
+                headers=headers,
+                json=request_body,
+                timeout=30
             )
 
-            # 시간별 관심도 데이터
-            interest_over_time = self.pytrends.interest_over_time()
+            if response.status_code != 200:
+                error_msg = f"네이버 API 오류: {response.status_code}"
+                try:
+                    error_data = response.json()
+                    error_msg += f" - {error_data.get('errorMessage', '')}"
+                except:
+                    pass
+                return {"error": error_msg, "keywords": []}
+
+            data = response.json()
 
             # 결과 처리
             result = {
                 "keywords": [],
                 "comparison": {},
                 "timeframe": timeframe,
-                "geo": geo,
+                "source": "naver_datalab"
             }
 
-            if interest_over_time.empty:
-                # 데이터가 없는 경우 모든 키워드에 0점 부여
+            results = data.get("results", [])
+            if not results:
                 for kw in keywords:
-                    result["keywords"].append(
-                        {
-                            "keyword": kw,
-                            "score": 0,
-                            "avg_interest": 0,
-                            "max_interest": 0,
-                            "trend": "데이터 없음",
-                        }
-                    )
+                    result["keywords"].append({
+                        "keyword": kw,
+                        "score": 0,
+                        "avg_interest": 0,
+                        "max_interest": 0,
+                        "trend": "데이터 없음",
+                    })
                 return result
 
             # 각 키워드별 점수 계산
-            for kw in keywords:
-                if kw in interest_over_time.columns:
-                    data = interest_over_time[kw]
-                    avg_interest = float(data.mean())
-                    max_interest = int(data.max())
-                    current_interest = int(data.iloc[-1]) if len(data) > 0 else 0
+            for kw_result in results:
+                kw_name = kw_result.get("title", "")
+                kw_data = kw_result.get("data", [])
 
-                    # 트렌드 방향 계산 (최근 vs 이전)
-                    if len(data) > 4:
-                        recent_avg = data.iloc[-4:].mean()
-                        older_avg = data.iloc[:-4].mean()
-                        if older_avg > 0:
-                            change_pct = ((recent_avg - older_avg) / older_avg) * 100
-                            if change_pct > 10:
-                                trend = "상승"
-                            elif change_pct < -10:
-                                trend = "하락"
-                            else:
-                                trend = "유지"
+                if not kw_data:
+                    result["keywords"].append({
+                        "keyword": kw_name,
+                        "score": 0,
+                        "avg_interest": 0,
+                        "max_interest": 0,
+                        "trend": "데이터 없음",
+                    })
+                    continue
+
+                # ratio 값 추출
+                ratios = [d.get("ratio", 0) for d in kw_data]
+
+                if not ratios:
+                    result["keywords"].append({
+                        "keyword": kw_name,
+                        "score": 0,
+                        "avg_interest": 0,
+                        "max_interest": 0,
+                        "trend": "데이터 없음",
+                    })
+                    continue
+
+                avg_interest = sum(ratios) / len(ratios)
+                max_interest = max(ratios)
+                current_interest = ratios[-1] if ratios else 0
+
+                # 트렌드 방향 계산 (최근 vs 이전)
+                if len(ratios) >= 4:
+                    recent_avg = sum(ratios[-3:]) / 3  # 최근 3주
+                    older_avg = sum(ratios[:-3]) / len(ratios[:-3]) if len(ratios) > 3 else recent_avg
+
+                    if older_avg > 0:
+                        change_pct = ((recent_avg - older_avg) / older_avg) * 100
+                        if change_pct > 15:
+                            trend = "상승"
+                        elif change_pct < -15:
+                            trend = "하락"
                         else:
-                            trend = "신규"
+                            trend = "유지"
                     else:
-                        trend = "데이터 부족"
-
-                    result["keywords"].append(
-                        {
-                            "keyword": kw,
-                            "score": current_interest,
-                            "avg_interest": round(avg_interest, 1),
-                            "max_interest": max_interest,
-                            "trend": trend,
-                        }
-                    )
+                        trend = "신규" if recent_avg > 0 else "데이터 없음"
                 else:
-                    result["keywords"].append(
-                        {
-                            "keyword": kw,
-                            "score": 0,
-                            "avg_interest": 0,
-                            "max_interest": 0,
-                            "trend": "데이터 없음",
-                        }
-                    )
+                    trend = "데이터 부족"
+
+                result["keywords"].append({
+                    "keyword": kw_name,
+                    "score": round(current_interest, 1),
+                    "avg_interest": round(avg_interest, 1),
+                    "max_interest": round(max_interest, 1),
+                    "trend": trend,
+                })
 
             # 점수 기준 정렬
             result["keywords"].sort(key=lambda x: x["score"], reverse=True)
@@ -155,8 +222,12 @@ class TrendsAnalyzer:
 
             return result
 
+        except requests.exceptions.Timeout:
+            return {"error": "네이버 API 타임아웃", "keywords": []}
+        except requests.exceptions.RequestException as e:
+            return {"error": f"네이버 API 연결 오류: {str(e)}", "keywords": []}
         except Exception as e:
-            return {"error": f"Google Trends 조회 오류: {str(e)}", "keywords": []}
+            return {"error": f"트렌드 조회 오류: {str(e)}", "keywords": []}
 
     def get_related_queries(
         self,
@@ -167,61 +238,25 @@ class TrendsAnalyzer:
         """
         키워드와 관련된 검색어를 조회합니다.
 
+        참고: 네이버 데이터랩 API는 관련 검색어 기능을 제공하지 않습니다.
+        대신 빈 결과를 반환하고, 키워드 확장 기능을 사용하는 것을 권장합니다.
+
         Args:
             keyword: 조회할 키워드
             geo: 지역 코드
             timeframe: 조회 기간
 
         Returns:
-            관련 검색어 목록 (인기/급상승)
+            관련 검색어 목록 (네이버 API는 미지원)
         """
-        if not self.pytrends:
-            return {"error": "Google Trends 연결 실패"}
-
-        try:
-            self.pytrends.build_payload(
-                kw_list=[keyword],
-                cat=0,
-                timeframe=timeframe,
-                geo=geo,
-                gprop="",
-            )
-
-            related = self.pytrends.related_queries()
-
-            result = {
-                "keyword": keyword,
-                "top_queries": [],
-                "rising_queries": [],
-            }
-
-            if keyword in related:
-                kw_data = related[keyword]
-
-                # 인기 검색어
-                if kw_data.get("top") is not None and not kw_data["top"].empty:
-                    for _, row in kw_data["top"].head(10).iterrows():
-                        result["top_queries"].append(
-                            {
-                                "query": row["query"],
-                                "value": int(row["value"]),
-                            }
-                        )
-
-                # 급상승 검색어
-                if kw_data.get("rising") is not None and not kw_data["rising"].empty:
-                    for _, row in kw_data["rising"].head(10).iterrows():
-                        result["rising_queries"].append(
-                            {
-                                "query": row["query"],
-                                "value": str(row["value"]),
-                            }
-                        )
-
-            return result
-
-        except Exception as e:
-            return {"error": f"관련 검색어 조회 오류: {str(e)}"}
+        # 네이버 데이터랩은 관련 검색어 API를 제공하지 않음
+        # GPT 키워드 확장 기능으로 대체
+        return {
+            "keyword": keyword,
+            "top_queries": [],
+            "rising_queries": [],
+            "note": "네이버 데이터랩은 관련 검색어를 제공하지 않습니다. 키워드 확장 기능을 활용하세요."
+        }
 
     def compare_keywords_batch(
         self,
@@ -231,7 +266,7 @@ class TrendsAnalyzer:
     ) -> List[Dict]:
         """
         5개 이상의 키워드를 배치로 비교합니다.
-        Google Trends는 한 번에 5개까지만 비교 가능하므로,
+        네이버 API는 한 번에 5개까지만 비교 가능하므로,
         기준 키워드를 두고 상대적 비교를 수행합니다.
 
         Args:
@@ -271,7 +306,7 @@ class TrendsAnalyzer:
         remaining = all_keywords[5:]
         for i in range(0, len(remaining), 4):
             batch = [reference_kw] + remaining[i : i + 4]
-            time.sleep(1)  # Rate limiting
+            time.sleep(0.5)  # Rate limiting (네이버 API 제한 고려)
 
             batch_result = self.get_keyword_interest(batch, timeframe, geo)
 
@@ -291,8 +326,8 @@ class TrendsAnalyzer:
 
                 for kw_data in batch_result.get("keywords", []):
                     if kw_data["keyword"] != reference_kw:
-                        normalized_score = int(kw_data["score"] * scale_factor)
-                        kw_data["score"] = min(normalized_score, 100)
+                        normalized_score = kw_data["score"] * scale_factor
+                        kw_data["score"] = min(round(normalized_score, 1), 100)
                         all_results[kw_data["keyword"]] = kw_data
 
         # 결과를 리스트로 변환하고 점수순 정렬
@@ -315,7 +350,7 @@ def main():
     # 테스트 키워드
     keywords = ["무드등", "LED 조명", "인테리어 조명", "취침등", "수면등"]
 
-    print("키워드 인기도 비교:")
+    print("네이버 데이터랩 키워드 인기도 비교:")
     result = analyzer.get_keyword_interest(keywords)
 
     if "error" in result:
@@ -326,12 +361,6 @@ def main():
                 f"  {kw['keyword']}: {kw['score']}점 "
                 f"(평균: {kw['avg_interest']}, 트렌드: {kw['trend']})"
             )
-
-    print("\n관련 검색어:")
-    related = analyzer.get_related_queries("무드등")
-    if "error" not in related:
-        print("  인기 검색어:", [q["query"] for q in related["top_queries"][:5]])
-        print("  급상승 검색어:", [q["query"] for q in related["rising_queries"][:5]])
 
 
 if __name__ == "__main__":
