@@ -10,6 +10,7 @@ from scraper import WebScraper
 from analyzer import SEOAnalyzer
 from trends import TrendsAnalyzer
 from company_keywords import CompanyKeywordAPI
+from rank_checker import GoogleRankChecker
 from urllib.parse import urlparse
 
 # PyInstaller 번들 여부 확인 후 경로 설정
@@ -312,6 +313,73 @@ def comprehensive_recommendations():
         return jsonify({"success": False, "error": f"API 키 오류: {str(e)}"})
     except Exception as e:
         return jsonify({"success": False, "error": f"오류 발생: {str(e)}"})
+
+
+@app.route("/rank-checker")
+def rank_checker_page():
+    """구글 순위 체커 페이지"""
+    return render_template("rank_checker.html")
+
+
+@app.route("/check-rank", methods=["POST"])
+def check_rank():
+    """구글 검색 순위 확인 API"""
+    data = request.get_json()
+    keyword = data.get("keyword", "").strip()
+    target_domain = data.get("target_domain", "").strip()
+    max_results = data.get("max_results", 100)
+
+    if not keyword:
+        return jsonify({"success": False, "error": "검색 키워드를 입력해주세요."})
+
+    if not target_domain:
+        return jsonify({"success": False, "error": "타겟 도메인을 입력해주세요."})
+
+    try:
+        checker = GoogleRankChecker()
+        result = checker.check_rank(
+            keyword=keyword,
+            target_domain=target_domain,
+            max_results=max_results,
+            country="kr"
+        )
+
+        return jsonify({"success": True, "result": result})
+
+    except Exception as e:
+        return jsonify({"success": False, "error": f"순위 확인 오류: {str(e)}"})
+
+
+@app.route("/check-rank-bulk", methods=["POST"])
+def check_rank_bulk():
+    """여러 키워드 순위 일괄 확인 API"""
+    data = request.get_json()
+    keywords = data.get("keywords", [])
+    target_domain = data.get("target_domain", "").strip()
+    max_results = data.get("max_results", 100)
+
+    if not keywords:
+        return jsonify({"success": False, "error": "검색 키워드를 입력해주세요."})
+
+    if not target_domain:
+        return jsonify({"success": False, "error": "타겟 도메인을 입력해주세요."})
+
+    # 최대 10개로 제한
+    keywords = [k.strip() for k in keywords if k.strip()][:10]
+
+    try:
+        checker = GoogleRankChecker()
+        results = checker.check_multiple_keywords(
+            keywords=keywords,
+            target_domain=target_domain,
+            max_results=max_results,
+            country="kr"
+        )
+
+        return jsonify({"success": True, "results": results})
+
+    except Exception as e:
+        return jsonify({"success": False, "error": f"순위 확인 오류: {str(e)}"})
 
 
 if __name__ == "__main__":

@@ -43,6 +43,23 @@
             font-size: 1.1rem;
         }
 
+        .nav-link {
+            display: inline-block;
+            margin-top: 15px;
+            color: #ff6b6b;
+            text-decoration: none;
+            font-size: 0.95rem;
+            transition: color 0.3s;
+            padding: 8px 16px;
+            border: 1px solid rgba(255, 107, 107, 0.3);
+            border-radius: 20px;
+        }
+
+        .nav-link:hover {
+            color: #ffc107;
+            border-color: rgba(255, 193, 7, 0.5);
+        }
+
         .search-box {
             background: rgba(255, 255, 255, 0.05);
             border-radius: 20px;
@@ -1375,6 +1392,7 @@
         <header>
             <h1>SEO 키워드 예측기</h1>
             <p>URL을 입력하면 AI가 SEO 분석, 키워드 확장, 경쟁 제품 분석을 한 번에 수행합니다</p>
+            <a href="/rank-checker" class="nav-link">구글 순위 체커 &rarr;</a>
         </header>
 
         <div class="search-box">

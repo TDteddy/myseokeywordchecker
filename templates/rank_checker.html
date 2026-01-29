@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>구글 검색 순위 체커</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            color: #fff;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            padding: 40px 0;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #ff6b6b, #ffc107);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        header p {
+            color: #8892b0;
+            font-size: 1.1rem;
+        }
+
+        .nav-link {
+            display: inline-block;
+            margin-top: 15px;
+            color: #00d9ff;
+            text-decoration: none;
+            font-size: 0.95rem;
+            transition: color 0.3s;
+        }
+
+        .nav-link:hover {
+            color: #00ff88;
+        }
+
+        .search-box {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .input-section {
+            margin-bottom: 20px;
+        }
+
+        .input-section label {
+            display: block;
+            color: #00d9ff;
+            font-weight: 600;
+            margin-bottom: 10px;
+            font-size: 1rem;
+        }
+
+        .input-section input {
+            width: 100%;
+            padding: 15px 20px;
+            font-size: 1rem;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            transition: all 0.3s ease;
+        }
+
+        .input-section input:focus {
+            outline: none;
+            border-color: #00d9ff;
+            box-shadow: 0 0 20px rgba(0, 217, 255, 0.2);
+        }
+
+        .input-section input::placeholder {
+            color: #8892b0;
+        }
+
+        .input-section textarea {
+            width: 100%;
+            padding: 15px 20px;
+            font-size: 1rem;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            transition: all 0.3s ease;
+            resize: vertical;
+            min-height: 150px;
+            font-family: inherit;
+        }
+
+        .input-section textarea:focus {
+            outline: none;
+            border-color: #00d9ff;
+            box-shadow: 0 0 20px rgba(0, 217, 255, 0.2);
+        }
+
+        .input-section textarea::placeholder {
+            color: #8892b0;
+        }
+
+        .input-hint {
+            color: #8892b0;
+            font-size: 0.85rem;
+            margin-top: 8px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 15px 40px;
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(90deg, #ff6b6b, #ffc107);
+            color: #1a1a2e;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(255, 107, 107, 0.3);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .progress-section {
+            display: none;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        .progress-section.active {
+            display: block;
+        }
+
+        .progress-text {
+            color: #8892b0;
+            margin-bottom: 15px;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff6b6b, #ffc107);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .results-section {
+            display: none;
+        }
+
+        .results-section.active {
+            display: block;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            margin: 30px 0 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid rgba(255, 107, 107, 0.3);
+            color: #ff6b6b;
+        }
+
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .summary-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        .summary-card label {
+            display: block;
+            color: #8892b0;
+            font-size: 0.85rem;
+            margin-bottom: 8px;
+        }
+
+        .summary-card .value {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .summary-card .value.found {
+            color: #00ff88;
+        }
+
+        .summary-card .value.not-found {
+            color: #ff5252;
+        }
+
+        .summary-card .value.avg {
+            color: #ffc107;
+        }
+
+        .results-table {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            overflow: hidden;
+        }
+
+        .results-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .results-table th {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            text-align: left;
+            color: #00d9ff;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .results-table td {
+            padding: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            color: #ccd6f6;
+        }
+
+        .results-table tr:hover td {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .rank-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        .rank-badge.top10 {
+            background: linear-gradient(90deg, #00ff88, #00d9ff);
+            color: #1a1a2e;
+        }
+
+        .rank-badge.top30 {
+            background: rgba(0, 255, 136, 0.2);
+            color: #00ff88;
+        }
+
+        .rank-badge.top50 {
+            background: rgba(255, 193, 7, 0.2);
+            color: #ffc107;
+        }
+
+        .rank-badge.top100 {
+            background: rgba(255, 152, 0, 0.2);
+            color: #ff9800;
+        }
+
+        .rank-badge.not-found {
+            background: rgba(255, 82, 82, 0.2);
+            color: #ff5252;
+        }
+
+        .keyword-cell {
+            font-weight: 500;
+        }
+
+        .url-cell {
+            max-width: 300px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: 0.85rem;
+            color: #8892b0;
+        }
+
+        .url-cell a {
+            color: #00d9ff;
+            text-decoration: none;
+        }
+
+        .url-cell a:hover {
+            text-decoration: underline;
+        }
+
+        .error-cell {
+            color: #ff5252;
+            font-size: 0.85rem;
+        }
+
+        .error-message {
+            background: rgba(255, 82, 82, 0.1);
+            border: 1px solid rgba(255, 82, 82, 0.3);
+            color: #ff5252;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            display: none;
+            margin-bottom: 20px;
+        }
+
+        .error-message.active {
+            display: block;
+        }
+
+        footer {
+            text-align: center;
+            padding: 30px;
+            color: #8892b0;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 1.8rem;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+
+            .results-table {
+                overflow-x: auto;
+            }
+
+            .results-table table {
+                min-width: 600px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Google Rank Checker</h1>
+            <p>구글 검색에서 특정 도메인의 순위를 확인합니다</p>
+            <a href="/" class="nav-link">&larr; SEO 키워드 예측기로 돌아가기</a>
+        </header>
+
+        <div class="search-box">
+            <div class="input-section">
+                <label for="domainInput">타겟 도메인</label>
+                <input type="text" id="domainInput" placeholder="순위를 확인할 도메인 (예: coupang.com, naver.com)">
+                <p class="input-hint">* http://, https://, www. 는 자동으로 제거됩니다. 해당 도메인을 포함한 모든 페이지의 순위를 확인합니다.</p>
+            </div>
+
+            <div class="input-section">
+                <label for="keywordsInput">검색 키워드 (최대 10개)</label>
+                <textarea id="keywordsInput" placeholder="검색할 키워드를 한 줄에 하나씩 입력하세요.&#10;&#10;예시:&#10;노트북 추천&#10;가성비 노트북&#10;업무용 노트북"></textarea>
+                <p class="input-hint">* 줄바꿈으로 구분하여 최대 10개까지 입력 가능합니다.</p>
+            </div>
+
+            <div class="button-group">
+                <button class="btn btn-primary" id="checkBtn" onclick="startCheck()">순위 확인 시작</button>
+            </div>
+        </div>
+
+        <div class="error-message" id="errorMessage"></div>
+
+        <div class="progress-section" id="progressSection">
+            <p class="progress-text" id="progressText">검색 중... (0/0)</p>
+            <div class="progress-bar">
+                <div class="progress-bar-fill" id="progressBarFill" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <div class="results-section" id="resultsSection">
+            <h2 class="section-title">검색 순위 결과</h2>
+
+            <div class="summary-cards">
+                <div class="summary-card">
+                    <label>검색 키워드</label>
+                    <span class="value" id="totalKeywords">0</span>
+                </div>
+                <div class="summary-card">
+                    <label>순위 확인됨</label>
+                    <span class="value found" id="foundCount">0</span>
+                </div>
+                <div class="summary-card">
+                    <label>순위 미확인</label>
+                    <span class="value not-found" id="notFoundCount">0</span>
+                </div>
+                <div class="summary-card">
+                    <label>평균 순위</label>
+                    <span class="value avg" id="avgRank">-</span>
+                </div>
+            </div>
+
+            <div class="results-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>키워드</th>
+                            <th>순위</th>
+                            <th>노출 URL</th>
+                        </tr>
+                    </thead>
+                    <tbody id="resultsBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <footer>
+            <p>Google Rank Checker - SEO 도구</p>
+        </footer>
+    </div>
+
+    <script>
+        async function startCheck() {
+            const domainInput = document.getElementById('domainInput');
+            const keywordsInput = document.getElementById('keywordsInput');
+            const checkBtn = document.getElementById('checkBtn');
+            const progressSection = document.getElementById('progressSection');
+            const resultsSection = document.getElementById('resultsSection');
+            const errorMessage = document.getElementById('errorMessage');
+
+            const domain = domainInput.value.trim();
+            const keywordsText = keywordsInput.value.trim();
+
+            // 유효성 검사
+            if (!domain) {
+                showError('타겟 도메인을 입력해주세요.');
+                return;
+            }
+
+            if (!keywordsText) {
+                showError('검색 키워드를 입력해주세요.');
+                return;
+            }
+
+            // 키워드 파싱 (줄바꿈으로 구분)
+            const keywords = keywordsText
+                .split('\n')
+                .map(k => k.trim())
+                .filter(k => k.length > 0)
+                .slice(0, 10);
+
+            if (keywords.length === 0) {
+                showError('유효한 키워드를 입력해주세요.');
+                return;
+            }
+
+            // 초기화
+            checkBtn.disabled = true;
+            errorMessage.classList.remove('active');
+            progressSection.classList.add('active');
+            resultsSection.classList.remove('active');
+
+            // 결과 저장
+            const results = [];
+            const totalKeywords = keywords.length;
+
+            try {
+                for (let i = 0; i < keywords.length; i++) {
+                    const keyword = keywords[i];
+
+                    // 진행률 업데이트
+                    updateProgress(i, totalKeywords, keyword);
+
+                    // API 호출
+                    const response = await fetch('/check-rank', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            keyword: keyword,
+                            target_domain: domain,
+                            max_results: 100
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        results.push(data.result);
+                    } else {
+                        results.push({
+                            keyword: keyword,
+                            target_domain: domain,
+                            rank: null,
+                            found: false,
+                            error: data.error || '알 수 없는 오류',
+                            url: null,
+                            title: null
+                        });
+                    }
+
+                    // 마지막이 아니면 잠시 대기 (서버에서 처리)
+                }
+
+                // 완료
+                updateProgress(totalKeywords, totalKeywords, '완료!');
+
+                // 결과 표시
+                displayResults(results, domain);
+
+            } catch (error) {
+                showError('순위 확인 중 오류가 발생했습니다: ' + error.message);
+            } finally {
+                checkBtn.disabled = false;
+                progressSection.classList.remove('active');
+            }
+        }
+
+        function updateProgress(current, total, keyword) {
+            const progressText = document.getElementById('progressText');
+            const progressBarFill = document.getElementById('progressBarFill');
+
+            const percent = total > 0 ? (current / total) * 100 : 0;
+            progressText.textContent = `검색 중... (${current}/${total}) - ${keyword}`;
+            progressBarFill.style.width = `${percent}%`;
+        }
+
+        function displayResults(results, domain) {
+            const resultsSection = document.getElementById('resultsSection');
+            const resultsBody = document.getElementById('resultsBody');
+
+            // 요약 계산
+            const total = results.length;
+            const found = results.filter(r => r.found).length;
+            const notFound = total - found;
+            const rankedResults = results.filter(r => r.rank !== null);
+            const avgRank = rankedResults.length > 0
+                ? Math.round(rankedResults.reduce((sum, r) => sum + r.rank, 0) / rankedResults.length * 10) / 10
+                : '-';
+
+            // 요약 표시
+            document.getElementById('totalKeywords').textContent = total;
+            document.getElementById('foundCount').textContent = found;
+            document.getElementById('notFoundCount').textContent = notFound;
+            document.getElementById('avgRank').textContent = avgRank;
+
+            // 테이블 생성
+            resultsBody.innerHTML = '';
+            results.forEach((result, index) => {
+                const tr = document.createElement('tr');
+
+                // 순위 배지 클래스 결정
+                let rankBadgeClass = 'not-found';
+                let rankText = '100위 밖';
+
+                if (result.found && result.rank) {
+                    if (result.rank <= 10) {
+                        rankBadgeClass = 'top10';
+                    } else if (result.rank <= 30) {
+                        rankBadgeClass = 'top30';
+                    } else if (result.rank <= 50) {
+                        rankBadgeClass = 'top50';
+                    } else {
+                        rankBadgeClass = 'top100';
+                    }
+                    rankText = `${result.rank}위`;
+                }
+
+                // URL 셀 내용
+                let urlContent = '-';
+                if (result.url) {
+                    urlContent = `<a href="${escapeHtml(result.url)}" target="_blank" title="${escapeHtml(result.title || result.url)}">${escapeHtml(result.url)}</a>`;
+                } else if (result.error) {
+                    urlContent = `<span class="error-cell">${escapeHtml(result.error)}</span>`;
+                }
+
+                tr.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td class="keyword-cell">${escapeHtml(result.keyword)}</td>
+                    <td><span class="rank-badge ${rankBadgeClass}">${rankText}</span></td>
+                    <td class="url-cell">${urlContent}</td>
+                `;
+
+                resultsBody.appendChild(tr);
+            });
+
+            resultsSection.classList.add('active');
+        }
+
+        function showError(message) {
+            const errorMessage = document.getElementById('errorMessage');
+            errorMessage.textContent = message;
+            errorMessage.classList.add('active');
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Enter 키로 검색
+        document.getElementById('domainInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                document.getElementById('keywordsInput').focus();
+            }
+        });
+    </script>
+</body>
+</html>
