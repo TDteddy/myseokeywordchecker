@@ -180,37 +180,78 @@ class GoogleRankChecker:
     def _extract_search_results(self, soup: BeautifulSoup) -> List[Dict]:
         """HTML에서 검색 결과를 추출합니다."""
         results = []
+        seen_urls = set()
 
-        # 구글 검색 결과 컨테이너 찾기
+        # 방법 1: div.g 셀렉터 (기존 방식)
         search_results = soup.select("div.g")
 
         for item in search_results:
             try:
-                # 링크 추출
                 link_elem = item.select_one("a[href^='http']")
                 if not link_elem:
                     continue
 
                 url = link_elem.get("href", "")
-                if not url or url.startswith("/search"):
+                if not url or url.startswith("/search") or "google.com" in url:
                     continue
 
-                # 제목 추출
+                if url in seen_urls:
+                    continue
+                seen_urls.add(url)
+
                 title_elem = item.select_one("h3")
                 title = title_elem.get_text(strip=True) if title_elem else ""
-
-                # 설명 추출
-                desc_elem = item.select_one("div[data-sncf]") or item.select_one(".VwiC3b")
-                description = desc_elem.get_text(strip=True) if desc_elem else ""
 
                 results.append({
                     "url": url,
                     "title": title,
-                    "description": description
+                    "description": ""
                 })
 
             except Exception:
                 continue
+
+        # 방법 2: 결과가 없으면 다른 셀렉터 시도
+        if len(results) < 5:
+            # 모든 검색 결과 링크를 직접 찾기
+            all_links = soup.find_all("a", href=True)
+
+            for link in all_links:
+                href = link.get("href", "")
+
+                # 구글 내부 링크 제외
+                if not href.startswith("http"):
+                    continue
+                if "google.com" in href or "google.co.kr" in href:
+                    continue
+                if "/search?" in href:
+                    continue
+                if href in seen_urls:
+                    continue
+
+                # 광고, 이미지 등 제외
+                if "webcache.googleusercontent" in href:
+                    continue
+                if "/imgres?" in href:
+                    continue
+
+                seen_urls.add(href)
+
+                # 제목 찾기 (h3가 있으면 사용)
+                title = ""
+                h3 = link.find("h3")
+                if h3:
+                    title = h3.get_text(strip=True)
+                else:
+                    # 링크 텍스트 사용
+                    title = link.get_text(strip=True)[:100]
+
+                if title:  # 제목이 있는 링크만 추가
+                    results.append({
+                        "url": href,
+                        "title": title,
+                        "description": ""
+                    })
 
         return results
 
