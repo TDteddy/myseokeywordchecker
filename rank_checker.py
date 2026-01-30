@@ -182,25 +182,27 @@ class GoogleRankChecker:
         results = []
         seen_urls = set()
 
-        # 방법 1: div.g 셀렉터 (기존 방식)
-        search_results = soup.select("div.g")
+        # 방법 1: h3.LC20lb 클래스로 검색 결과 제목 찾기 (2024년 구글 구조)
+        h3_titles = soup.select("h3.LC20lb")
 
-        for item in search_results:
+        for h3 in h3_titles:
             try:
-                link_elem = item.select_one("a[href^='http']")
-                if not link_elem:
+                # h3의 부모 <a> 태그 찾기
+                parent_a = h3.find_parent("a")
+                if not parent_a:
                     continue
 
-                url = link_elem.get("href", "")
-                if not url or url.startswith("/search") or "google.com" in url:
+                url = parent_a.get("href", "")
+                if not url or not url.startswith("http"):
+                    continue
+                if "google.com" in url or "google.co.kr" in url:
                     continue
 
                 if url in seen_urls:
                     continue
                 seen_urls.add(url)
 
-                title_elem = item.select_one("h3")
-                title = title_elem.get_text(strip=True) if title_elem else ""
+                title = h3.get_text(strip=True)
 
                 results.append({
                     "url": url,
@@ -211,15 +213,43 @@ class GoogleRankChecker:
             except Exception:
                 continue
 
-        # 방법 2: 결과가 없으면 다른 셀렉터 시도
+        # 방법 2: div.g 셀렉터 (기존 방식)
         if len(results) < 5:
-            # 모든 검색 결과 링크를 직접 찾기
+            search_results = soup.select("div.g")
+
+            for item in search_results:
+                try:
+                    link_elem = item.select_one("a[href^='http']")
+                    if not link_elem:
+                        continue
+
+                    url = link_elem.get("href", "")
+                    if not url or url.startswith("/search") or "google.com" in url:
+                        continue
+
+                    if url in seen_urls:
+                        continue
+                    seen_urls.add(url)
+
+                    title_elem = item.select_one("h3")
+                    title = title_elem.get_text(strip=True) if title_elem else ""
+
+                    results.append({
+                        "url": url,
+                        "title": title,
+                        "description": ""
+                    })
+
+                except Exception:
+                    continue
+
+        # 방법 3: 결과가 여전히 부족하면 모든 외부 링크 스캔
+        if len(results) < 5:
             all_links = soup.find_all("a", href=True)
 
             for link in all_links:
                 href = link.get("href", "")
 
-                # 구글 내부 링크 제외
                 if not href.startswith("http"):
                     continue
                 if "google.com" in href or "google.co.kr" in href:
@@ -228,8 +258,6 @@ class GoogleRankChecker:
                     continue
                 if href in seen_urls:
                     continue
-
-                # 광고, 이미지 등 제외
                 if "webcache.googleusercontent" in href:
                     continue
                 if "/imgres?" in href:
@@ -237,16 +265,14 @@ class GoogleRankChecker:
 
                 seen_urls.add(href)
 
-                # 제목 찾기 (h3가 있으면 사용)
                 title = ""
                 h3 = link.find("h3")
                 if h3:
                     title = h3.get_text(strip=True)
                 else:
-                    # 링크 텍스트 사용
                     title = link.get_text(strip=True)[:100]
 
-                if title:  # 제목이 있는 링크만 추가
+                if title:
                     results.append({
                         "url": href,
                         "title": title,
