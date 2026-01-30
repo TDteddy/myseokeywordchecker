@@ -182,8 +182,20 @@ class GoogleRankChecker:
         results = []
         seen_urls = set()
 
-        # 방법 1: h3.LC20lb 클래스로 검색 결과 제목 찾기 (2024년 구글 구조)
-        h3_titles = soup.select("h3.LC20lb")
+        # 방법 1: 여러 h3 클래스 셀렉터 시도 (구글이 자주 변경함)
+        h3_selectors = [
+            "h3.LC20lb",      # 기본 검색 결과
+            "h3.DKV0Md",      # 대체 클래스
+            "h3.MBeuO",       # 대체 클래스
+            "a.zReHs h3",     # 링크 안의 h3
+            "div.yuRUbf h3",  # 검색 결과 컨테이너
+        ]
+
+        h3_titles = []
+        for selector in h3_selectors:
+            h3_titles = soup.select(selector)
+            if h3_titles:
+                break
 
         for h3 in h3_titles:
             try:
