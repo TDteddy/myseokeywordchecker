@@ -14,17 +14,56 @@ from typing import List, Dict, Optional
 class GoogleRankChecker:
     """구글 검색 순위를 체크하는 클래스"""
 
+    # 다양한 User-Agent 목록 (구글 차단 우회)
+    USER_AGENTS = [
+        # Chrome Windows
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36",
+        # Chrome Mac
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        # Firefox
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:122.0) Gecko/20100101 Firefox/122.0",
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:122.0) Gecko/20100101 Firefox/122.0",
+        # Edge
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36 Edg/121.0.0.0",
+    ]
+
     def __init__(self):
+        self.session = requests.Session()
+        self._update_headers()
+        self.last_request_time = 0
+        self.min_delay = 2  # 최소 요청 간격 (초)
+
+    def _update_headers(self):
+        """랜덤 User-Agent로 헤더 업데이트"""
+        user_agent = random.choice(self.USER_AGENTS)
         self.headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+            "User-Agent": user_agent,
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
             "Accept-Language": "ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7",
             "Accept-Encoding": "gzip, deflate, br",
             "Connection": "keep-alive",
             "Upgrade-Insecure-Requests": "1",
+            "Sec-Fetch-Dest": "document",
+            "Sec-Fetch-Mode": "navigate",
+            "Sec-Fetch-Site": "none",
+            "Sec-Fetch-User": "?1",
+            "Cache-Control": "max-age=0",
+            "sec-ch-ua": '"Not A(Brand";v="99", "Google Chrome";v="121", "Chromium";v="121"',
+            "sec-ch-ua-mobile": "?0",
+            "sec-ch-ua-platform": '"Windows"',
         }
-        self.session = requests.Session()
         self.session.headers.update(self.headers)
+
+    def _wait_between_requests(self):
+        """요청 간 적절한 딜레이 적용"""
+        elapsed = time.time() - self.last_request_time
+        if elapsed < self.min_delay:
+            delay = self.min_delay - elapsed + random.uniform(0.5, 1.5)
+            time.sleep(delay)
+        self.last_request_time = time.time()
 
     def check_rank(
         self,
@@ -54,8 +93,30 @@ class GoogleRankChecker:
             # 구글 검색 URL 구성
             search_url = self._build_search_url(keyword, max_results, country)
 
-            # 검색 결과 가져오기
-            response = self.session.get(search_url, timeout=30)
+            # 요청 전 딜레이 적용
+            self._wait_between_requests()
+
+            # 랜덤 User-Agent 적용
+            self._update_headers()
+
+            # 재시도 로직 (429 에러 대응)
+            max_retries = 3
+            response = None
+
+            for attempt in range(max_retries):
+                response = self.session.get(search_url, timeout=30)
+
+                if response.status_code == 200:
+                    break
+                elif response.status_code == 429:
+                    # Too Many Requests - 더 긴 딜레이 후 재시도
+                    if attempt < max_retries - 1:
+                        wait_time = (attempt + 1) * 5 + random.uniform(2, 5)
+                        time.sleep(wait_time)
+                        self._update_headers()  # 새 User-Agent로 변경
+                        continue
+                else:
+                    break  # 다른 에러는 재시도하지 않음
 
             if response.status_code != 200:
                 result = {
@@ -73,6 +134,7 @@ class GoogleRankChecker:
                         "search_url": search_url,
                         "status_code": response.status_code,
                         "response_length": len(response.text),
+                        "retries": attempt + 1,
                     }
                 return result
 
@@ -143,7 +205,7 @@ class GoogleRankChecker:
         target_domain: str,
         max_results: int = 100,
         country: str = "kr",
-        delay_range: tuple = (2, 4)
+        delay_range: tuple = (5, 10)
     ) -> List[Dict]:
         """
         여러 키워드에 대한 순위를 확인합니다.
