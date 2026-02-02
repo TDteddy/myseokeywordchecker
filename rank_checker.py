@@ -155,6 +155,20 @@ class GoogleRankChecker:
             except TimeoutException:
                 pass  # 타임아웃이어도 계속 진행
 
+            # 캡차 감지 - 캡차가 있으면 사용자가 풀 때까지 대기
+            captcha_wait = 0
+            max_captcha_wait = 120  # 최대 2분 대기
+            while captcha_wait < max_captcha_wait:
+                # 캡차 또는 비정상 트래픽 페이지 감지
+                page_text = self.driver.page_source.lower()
+                if "unusual traffic" in page_text or "captcha" in page_text or "recaptcha" in page_text:
+                    if captcha_wait == 0:
+                        print("캡차 감지됨 - 브라우저에서 캡차를 풀어주세요 (최대 2분 대기)")
+                    time.sleep(5)
+                    captcha_wait += 5
+                else:
+                    break
+
             # 추가 대기 (JavaScript 렌더링)
             time.sleep(random.uniform(1, 2))
 
