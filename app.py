@@ -328,6 +328,7 @@ def check_rank():
     keyword = data.get("keyword", "").strip()
     target_domain = data.get("target_domain", "").strip()
     max_results = data.get("max_results", 100)
+    debug = data.get("debug", False)
 
     if not keyword:
         return jsonify({"success": False, "error": "검색 키워드를 입력해주세요."})
@@ -341,7 +342,8 @@ def check_rank():
             keyword=keyword,
             target_domain=target_domain,
             max_results=max_results,
-            country="kr"
+            country="kr",
+            debug=debug
         )
 
         return jsonify({"success": True, "result": result})
