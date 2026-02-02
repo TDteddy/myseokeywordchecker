@@ -54,9 +54,16 @@ class GoogleRankChecker:
         options.add_argument('--disable-gpu')
         options.add_argument('--window-size=1920,1080')
         options.add_argument('--lang=ko-KR')
+        options.add_argument('--accept-lang=ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7')
 
         # 봇 감지 우회 옵션
         options.add_argument('--disable-blink-features=AutomationControlled')
+        options.add_argument('--disable-extensions')
+        options.add_argument('--disable-infobars')
+        options.add_argument('--disable-popup-blocking')
+
+        # User-Agent 설정
+        options.add_argument('--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36')
 
         try:
             self.driver = uc.Chrome(options=options)
@@ -125,7 +132,25 @@ class GoogleRankChecker:
             # 구글 검색 URL
             search_url = self._build_search_url(keyword, max_results, country)
 
-            # 페이지 로드
+            # 먼저 구글 메인 페이지 방문 (쿠키/세션 초기화)
+            self.driver.get("https://www.google.co.kr")
+            time.sleep(random.uniform(1, 2))
+
+            # 쿠키 동의 버튼 클릭 시도 (있는 경우)
+            try:
+                cookie_buttons = self.driver.find_elements(By.CSS_SELECTOR,
+                    "button[id*='accept'], button[id*='agree'], button[jsname='b3VHJd']")
+                for btn in cookie_buttons:
+                    try:
+                        btn.click()
+                        time.sleep(0.5)
+                        break
+                    except Exception:
+                        pass
+            except Exception:
+                pass
+
+            # 검색 페이지로 이동
             self.driver.get(search_url)
 
             # 검색 결과 로딩 대기 (#rso 또는 #search 요소)
