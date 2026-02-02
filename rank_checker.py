@@ -1,6 +1,6 @@
 """
 구글 검색 순위 체커 모듈
-Selenium + undetected-chromedriver를 사용하여 구글 차단 우회
+Selenium + ChromeDriver를 사용하여 구글 검색 순위 확인
 """
 
 import time
@@ -11,15 +11,18 @@ from bs4 import BeautifulSoup
 
 # Selenium 관련 import
 try:
-    import undetected_chromedriver as uc
+    from selenium import webdriver
+    from selenium.webdriver.chrome.service import Service
+    from selenium.webdriver.chrome.options import Options
     from selenium.webdriver.common.by import By
     from selenium.webdriver.support.ui import WebDriverWait
     from selenium.webdriver.support import expected_conditions as EC
     from selenium.common.exceptions import TimeoutException, WebDriverException
+    from webdriver_manager.chrome import ChromeDriverManager
     SELENIUM_AVAILABLE = True
 except ImportError:
     SELENIUM_AVAILABLE = False
-    print("Warning: undetected-chromedriver not installed. Run: pip install undetected-chromedriver")
+    print("Warning: selenium not installed. Run: pip install selenium webdriver-manager")
 
 
 class GoogleRankChecker:
@@ -38,12 +41,12 @@ class GoogleRankChecker:
     def _init_driver(self):
         """Chrome 드라이버 초기화"""
         if not SELENIUM_AVAILABLE:
-            raise ImportError("undetected-chromedriver가 설치되지 않았습니다. pip install undetected-chromedriver")
+            raise ImportError("selenium이 설치되지 않았습니다. pip install selenium webdriver-manager")
 
         if self.driver is not None:
             return
 
-        options = uc.ChromeOptions()
+        options = Options()
 
         if self.headless:
             options.add_argument('--headless=new')
@@ -54,7 +57,6 @@ class GoogleRankChecker:
         options.add_argument('--disable-gpu')
         options.add_argument('--window-size=1920,1080')
         options.add_argument('--lang=ko-KR')
-        options.add_argument('--accept-lang=ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7')
 
         # 봇 감지 우회 옵션
         options.add_argument('--disable-blink-features=AutomationControlled')
@@ -65,8 +67,16 @@ class GoogleRankChecker:
         # User-Agent 설정
         options.add_argument('--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36')
 
+        # 자동화 감지 우회
+        options.add_experimental_option('excludeSwitches', ['enable-automation'])
+        options.add_experimental_option('useAutomationExtension', False)
+
         try:
-            self.driver = uc.Chrome(options=options)
+            service = Service(ChromeDriverManager().install())
+            self.driver = webdriver.Chrome(service=service, options=options)
+            self.driver.execute_cdp_cmd('Page.addScriptToEvaluateOnNewDocument', {
+                'source': 'Object.defineProperty(navigator, "webdriver", {get: () => undefined})'
+            })
             self.driver.set_page_load_timeout(30)
         except Exception as e:
             raise RuntimeError(f"Chrome 드라이버 초기화 실패: {str(e)}")
