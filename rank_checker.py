@@ -31,7 +31,8 @@ class GoogleRankChecker:
         keyword: str,
         target_domain: str,
         max_results: int = 100,
-        country: str = "kr"
+        country: str = "kr",
+        debug: bool = False
     ) -> Dict:
         """
         특정 키워드에 대한 도메인의 구글 검색 순위를 확인합니다.
@@ -41,6 +42,7 @@ class GoogleRankChecker:
             target_domain: 순위를 확인할 도메인 (예: example.com)
             max_results: 최대 검색 결과 수 (기본 100)
             country: 국가 코드 (기본 kr)
+            debug: 디버그 모드 (상세 정보 반환)
 
         Returns:
             순위 정보 딕셔너리
@@ -56,7 +58,7 @@ class GoogleRankChecker:
             response = self.session.get(search_url, timeout=30)
 
             if response.status_code != 200:
-                return {
+                result = {
                     "keyword": keyword,
                     "target_domain": target_domain,
                     "rank": None,
@@ -66,17 +68,24 @@ class GoogleRankChecker:
                     "title": None,
                     "total_checked": 0
                 }
+                if debug:
+                    result["debug"] = {
+                        "search_url": search_url,
+                        "status_code": response.status_code,
+                        "response_length": len(response.text),
+                    }
+                return result
 
             # HTML 파싱
             soup = BeautifulSoup(response.text, "html.parser")
 
             # 검색 결과 추출
-            results = self._extract_search_results(soup)
+            results = self._extract_search_results(soup, debug=debug)
 
             # 순위 찾기
             rank_info = self._find_domain_rank(results, target_domain)
 
-            return {
+            result = {
                 "keyword": keyword,
                 "target_domain": target_domain,
                 "rank": rank_info["rank"],
@@ -86,6 +95,24 @@ class GoogleRankChecker:
                 "total_checked": len(results),
                 "error": None
             }
+
+            if debug:
+                # 디버그 정보 추가
+                result["debug"] = {
+                    "search_url": search_url,
+                    "status_code": response.status_code,
+                    "response_length": len(response.text),
+                    "has_rso": bool(soup.select_one("#rso")),
+                    "h3_count": len(soup.find_all("h3")),
+                    "a_count": len(soup.find_all("a", href=True)),
+                    "div_g_count": len(soup.select("div.g")),
+                    "extracted_results": results[:10],  # 처음 10개 결과
+                    "all_h3_classes": list(set(
+                        str(h3.get("class", [])) for h3 in soup.find_all("h3")
+                    ))[:10],
+                }
+
+            return result
 
         except requests.exceptions.Timeout:
             return {
@@ -177,55 +204,101 @@ class GoogleRankChecker:
 
         return url
 
-    def _extract_search_results(self, soup: BeautifulSoup) -> List[Dict]:
+    def _extract_search_results(self, soup: BeautifulSoup, debug: bool = False) -> List[Dict]:
         """HTML에서 검색 결과를 추출합니다."""
         results = []
         seen_urls = set()
 
-        # 방법 1: 여러 h3 클래스 셀렉터 시도 (구글이 자주 변경함)
-        h3_selectors = [
-            "h3.LC20lb",      # 기본 검색 결과
-            "h3.DKV0Md",      # 대체 클래스
-            "h3.MBeuO",       # 대체 클래스
-            "a.zReHs h3",     # 링크 안의 h3
-            "div.yuRUbf h3",  # 검색 결과 컨테이너
-        ]
+        def add_result(url: str, title: str, method: str = "") -> bool:
+            """결과를 추가하고 성공 여부를 반환"""
+            if not url or not url.startswith("http"):
+                return False
+            if "google.com" in url or "google.co.kr" in url:
+                return False
+            if "/search?" in url or "webcache.googleusercontent" in url:
+                return False
+            if "/imgres?" in url:
+                return False
+            if url in seen_urls:
+                return False
 
-        h3_titles = []
-        for selector in h3_selectors:
-            h3_titles = soup.select(selector)
-            if h3_titles:
-                break
+            seen_urls.add(url)
+            results.append({
+                "url": url,
+                "title": title or "",
+                "description": "",
+                "_method": method if debug else ""
+            })
+            return True
 
-        for h3 in h3_titles:
-            try:
-                # h3의 부모 <a> 태그 찾기
-                parent_a = h3.find_parent("a")
-                if not parent_a:
-                    continue
+        # 방법 1: #rso 내의 모든 링크에서 검색 결과 추출 (2024-2025 구조)
+        # 구글의 새로운 구조: #rso 안에 다양한 div 구조로 결과가 배치됨
+        rso = soup.select_one("#rso")
+        if rso:
+            # #rso 내의 외부 링크를 가진 a 태그 (span > a 포함)
+            rso_links = rso.select("a[href^='http']")
+            for link in rso_links:
+                href = link.get("href", "")
 
-                url = parent_a.get("href", "")
-                if not url or not url.startswith("http"):
-                    continue
-                if "google.com" in url or "google.co.kr" in url:
-                    continue
+                # 제목 찾기: 같은 컨테이너 내 h3 또는 링크 텍스트
+                title = ""
+                # 링크 내부의 h3
+                h3_in_link = link.find("h3")
+                if h3_in_link:
+                    title = h3_in_link.get_text(strip=True)
+                else:
+                    # 형제 또는 부모 컨테이너의 h3
+                    parent = link.find_parent(["div"])
+                    if parent:
+                        h3_sibling = parent.find("h3")
+                        if h3_sibling:
+                            title = h3_sibling.get_text(strip=True)
 
-                if url in seen_urls:
-                    continue
-                seen_urls.add(url)
+                if not title:
+                    # 링크 텍스트 사용 (너무 짧거나 긴 것 제외)
+                    link_text = link.get_text(strip=True)
+                    if 3 < len(link_text) < 200:
+                        title = link_text
 
-                title = h3.get_text(strip=True)
+                if title:
+                    add_result(href, title, "rso_links")
 
-                results.append({
-                    "url": url,
-                    "title": title,
-                    "description": ""
-                })
+        # 방법 2: 여러 h3 클래스 셀렉터 시도 (구글이 자주 변경함)
+        if len(results) < 5:
+            h3_selectors = [
+                "h3.LC20lb",      # 기본 검색 결과
+                "h3.DKV0Md",      # 대체 클래스
+                "h3.MBeuO",       # 대체 클래스
+                "h3.zBAuLc",      # 2024년 신규 클래스
+                "h3.qsLff",       # 2024년 신규 클래스
+                "a.zReHs h3",     # 링크 안의 h3
+                "div.yuRUbf h3",  # 검색 결과 컨테이너
+                "div.kb0PBd h3",  # 2024년 신규 컨테이너
+            ]
 
-            except Exception:
-                continue
+            for selector in h3_selectors:
+                h3_titles = soup.select(selector)
+                for h3 in h3_titles:
+                    try:
+                        # h3의 부모 또는 형제 <a> 태그 찾기
+                        parent_a = h3.find_parent("a")
+                        if not parent_a:
+                            # 부모 div에서 a 태그 찾기
+                            parent_div = h3.find_parent("div")
+                            if parent_div:
+                                parent_a = parent_div.find("a", href=True)
 
-        # 방법 2: div.g 셀렉터 (기존 방식)
+                        if not parent_a:
+                            continue
+
+                        url = parent_a.get("href", "")
+                        title = h3.get_text(strip=True)
+                        add_result(url, title, f"h3_{selector}")
+
+                    except Exception:
+                        continue
+
+        # 방법 3: div.g 셀렉터 (기존 방식)
         if len(results) < 5:
             search_results = soup.select("div.g")
 
@@ -236,26 +309,58 @@ class GoogleRankChecker:
                         continue
 
                     url = link_elem.get("href", "")
-                    if not url or url.startswith("/search") or "google.com" in url:
-                        continue
-
-                    if url in seen_urls:
-                        continue
-                    seen_urls.add(url)
-
                     title_elem = item.select_one("h3")
                     title = title_elem.get_text(strip=True) if title_elem else ""
 
-                    results.append({
-                        "url": url,
-                        "title": title,
-                        "description": ""
-                    })
+                    add_result(url, title, "div_g")
 
                 except Exception:
                     continue
 
-        # 방법 3: 결과가 여전히 부족하면 모든 외부 링크 스캔
+        # 방법 4: data-ved 속성을 가진 링크 (구글 검색 결과 특성)
+        if len(results) < 5:
+            ved_links = soup.select("a[data-ved][href^='http']")
+            for link in ved_links:
+                href = link.get("href", "")
+                title = ""
+                h3 = link.find("h3")
+                if h3:
+                    title = h3.get_text(strip=True)
+                else:
+                    link_text = link.get_text(strip=True)
+                    if 3 < len(link_text) < 200:
+                        title = link_text
+
+                if title:
+                    add_result(href, title, "data_ved")
+
+        # 방법 5: cite 태그 근처의 링크 (cite는 URL 표시 영역)
+        if len(results) < 5:
+            cites = soup.find_all("cite")
+            for cite in cites:
+                try:
+                    parent = cite.find_parent(["div", "span"])
+                    if parent:
+                        link = parent.find_parent("a") or parent.find("a", href=True)
+                        if link:
+                            href = link.get("href", "")
+                            # 같은 컨테이너의 h3 찾기
+                            container = link.find_parent("div", recursive=True)
+                            title = ""
+                            if container:
+                                h3 = container.find("h3")
+                                if h3:
+                                    title = h3.get_text(strip=True)
+
+                            if not title:
+                                title = link.get_text(strip=True)[:100]
+
+                            if title:
+                                add_result(href, title, "cite")
+                except Exception:
+                    continue
+
+        # 방법 6: 결과가 여전히 부족하면 모든 외부 링크 스캔
         if len(results) < 5:
             all_links = soup.find_all("a", href=True)
 
@@ -264,32 +369,23 @@ class GoogleRankChecker:
 
                 if not href.startswith("http"):
                     continue
-                if "google.com" in href or "google.co.kr" in href:
-                    continue
-                if "/search?" in href:
-                    continue
-                if href in seen_urls:
-                    continue
-                if "webcache.googleusercontent" in href:
-                    continue
-                if "/imgres?" in href:
-                    continue
-
-                seen_urls.add(href)
 
                 title = ""
                 h3 = link.find("h3")
                 if h3:
                     title = h3.get_text(strip=True)
                 else:
-                    title = link.get_text(strip=True)[:100]
+                    link_text = link.get_text(strip=True)
+                    if 3 < len(link_text) < 100:
+                        title = link_text
 
                 if title:
-                    results.append({
-                        "url": href,
-                        "title": title,
-                        "description": ""
-                    })
+                    add_result(href, title, "fallback")
+
+        # 디버그 정보가 아니면 _method 필드 제거
+        if not debug:
+            for r in results:
+                r.pop("_method", None)
 
         return results
 
@@ -330,13 +426,20 @@ class GoogleRankChecker:
 
 def main():
     """테스트용 메인 함수"""
+    import sys
+    import json
+
     checker = GoogleRankChecker()
+
+    # 디버그 모드 확인 (--debug 플래그)
+    debug_mode = "--debug" in sys.argv
 
     # 테스트
     result = checker.check_rank(
         keyword="노트북 추천",
         target_domain="coupang.com",
-        max_results=50
+        max_results=50,
+        debug=debug_mode
     )
 
     print(f"키워드: {result['keyword']}")
@@ -349,6 +452,29 @@ def main():
         print(f"순위: 100위 밖 (확인된 결과: {result['total_checked']}개)")
         if result['error']:
             print(f"오류: {result['error']}")
+
+    # 디버그 정보 출력
+    if debug_mode and "debug" in result:
+        print("\n=== 디버그 정보 ===")
+        debug_info = result["debug"]
+        print(f"검색 URL: {debug_info.get('search_url', 'N/A')}")
+        print(f"HTTP 상태: {debug_info.get('status_code', 'N/A')}")
+        print(f"응답 길이: {debug_info.get('response_length', 0):,} bytes")
+        print(f"#rso 존재: {debug_info.get('has_rso', False)}")
+        print(f"h3 개수: {debug_info.get('h3_count', 0)}")
+        print(f"a 태그 개수: {debug_info.get('a_count', 0)}")
+        print(f"div.g 개수: {debug_info.get('div_g_count', 0)}")
+
+        print(f"\nh3 클래스 목록:")
+        for cls in debug_info.get("all_h3_classes", []):
+            print(f"  {cls}")
+
+        print(f"\n추출된 결과 (상위 10개):")
+        for i, r in enumerate(debug_info.get("extracted_results", []), 1):
+            print(f"  {i}. {r.get('title', '')[:50]}")
+            print(f"     URL: {r.get('url', '')[:70]}")
+            if r.get("_method"):
+                print(f"     방법: {r.get('_method')}")
 
 
 if __name__ == "__main__":
