@@ -68,10 +68,17 @@ class GoogleRankChecker:
         """드라이버 종료"""
         if self.driver:
             try:
+                self.driver.close()
+            except Exception:
+                pass
+            try:
                 self.driver.quit()
             except Exception:
                 pass
-            self.driver = None
+            try:
+                self.driver = None
+            except Exception:
+                pass
 
     def _wait_between_requests(self):
         """요청 간 적절한 딜레이 적용"""
@@ -105,6 +112,9 @@ class GoogleRankChecker:
         # 도메인 정규화
         target_domain = self._normalize_domain(target_domain)
 
+        # 이전 드라이버가 있으면 정리
+        self._close_driver()
+
         try:
             # 드라이버 초기화
             self._init_driver()
@@ -132,8 +142,9 @@ class GoogleRankChecker:
             # 스크롤 다운 (더 많은 결과 로드)
             self._scroll_page()
 
-            # 페이지 소스 가져오기
+            # 페이지 소스와 제목 가져오기 (드라이버 종료 전에)
             page_source = self.driver.page_source
+            page_title = self.driver.title
 
             # BeautifulSoup으로 파싱
             soup = BeautifulSoup(page_source, "html.parser")
@@ -158,7 +169,7 @@ class GoogleRankChecker:
             if debug:
                 result["debug"] = {
                     "search_url": search_url,
-                    "page_title": self.driver.title,
+                    "page_title": page_title,
                     "response_length": len(page_source),
                     "has_rso": bool(soup.select_one("#rso")),
                     "h3_count": len(soup.find_all("h3")),
@@ -205,6 +216,9 @@ class GoogleRankChecker:
                 "title": None,
                 "total_checked": 0
             }
+        finally:
+            # 항상 드라이버 종료
+            self._close_driver()
 
     def _scroll_page(self):
         """페이지 스크롤 (더 많은 결과 로드)"""
