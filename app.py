@@ -10,7 +10,7 @@ from scraper import WebScraper
 from analyzer import SEOAnalyzer
 from trends import TrendsAnalyzer
 from company_keywords import CompanyKeywordAPI
-from rank_checker import GoogleRankChecker
+from rank_checker import NaverRankChecker
 from urllib.parse import urlparse
 
 # PyInstaller 번들 여부 확인 후 경로 설정
@@ -317,13 +317,13 @@ def comprehensive_recommendations():
 
 @app.route("/rank-checker")
 def rank_checker_page():
-    """구글 순위 체커 페이지"""
+    """네이버 순위 체커 페이지"""
     return render_template("rank_checker.html")
 
 
 @app.route("/check-rank", methods=["POST"])
 def check_rank():
-    """구글 검색 순위 확인 API"""
+    """네이버 검색 순위 확인 API"""
     data = request.get_json()
     keyword = data.get("keyword", "").strip()
     target_domain = data.get("target_domain", "").strip()
@@ -337,17 +337,18 @@ def check_rank():
         return jsonify({"success": False, "error": "타겟 도메인을 입력해주세요."})
 
     try:
-        checker = GoogleRankChecker()
+        checker = NaverRankChecker()
         result = checker.check_rank(
             keyword=keyword,
             target_domain=target_domain,
             max_results=max_results,
-            country="kr",
             debug=debug
         )
 
         return jsonify({"success": True, "result": result})
 
+    except ValueError as e:
+        return jsonify({"success": False, "error": str(e)})
     except Exception as e:
         return jsonify({"success": False, "error": f"순위 확인 오류: {str(e)}"})
 
@@ -370,16 +371,17 @@ def check_rank_bulk():
     keywords = [k.strip() for k in keywords if k.strip()][:10]
 
     try:
-        checker = GoogleRankChecker()
+        checker = NaverRankChecker()
         results = checker.check_multiple_keywords(
             keywords=keywords,
             target_domain=target_domain,
-            max_results=max_results,
-            country="kr"
+            max_results=max_results
         )
 
         return jsonify({"success": True, "results": results})
 
+    except ValueError as e:
+        return jsonify({"success": False, "error": str(e)})
     except Exception as e:
         return jsonify({"success": False, "error": f"순위 확인 오류: {str(e)}"})
 
